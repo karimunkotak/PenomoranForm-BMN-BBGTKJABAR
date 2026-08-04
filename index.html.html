@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penomoran Formulir BMN BBGTK Jabar</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 pb-10">
+
+    <!-- Navigation Bar Compact -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <nav class="bg-[#1e3264] text-white rounded-xl flex items-center justify-between px-5 py-3 shadow-md">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-file-alt text-blue-400 text-2xl"></i>
+                <div class="text-base font-bold uppercase tracking-wide leading-tight">
+                    PENOMORAN FORMULIR BMN BBGTK JABAR
+                </div>
+            </div>
+            <div class="hidden md:flex space-x-2">
+                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer">
+                    <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
+                </a>
+                <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
+                    <i class="fas fa-database mr-1.5"></i> Rekap No Surat
+                </a>
+                <a href="#" onclick="openModalSpreadsheet()" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
+                    <i class="fas fa-file-excel mr-1.5 text-blue-300"></i> Spreadsheet
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ================= VIEW 1: DATA AJUAN ================= -->
+    <main id="viewDataAjuan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 transition-all duration-300">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-[#1e3264]">Dashboard Data Penomoran</h1>
+            <div class="flex items-center space-x-2.5 mt-2 sm:mt-0">
+                <button onclick="loadDataDariCloud()" class="bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs transition-colors">
+                    <i id="iconRefresh" class="fas fa-sync-alt mr-1.5 text-slate-400 transition-transform duration-500"></i> Refresh
+                </button>
+                <button onclick="openModalTambah()" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-3.5 py-2 rounded-lg flex items-center text-xs font-semibold shadow-xs transition-colors">
+                    <i class="fas fa-plus mr-1.5"></i> Tambah Ajuan
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse table-auto">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 tracking-wider">
+                            <th class="px-3 py-3 align-middle w-10 text-center">NO</th>
+                            <th class="px-4 py-3 align-top w-[25%]">
+                                <div class="flex flex-col space-y-1">
+                                    <span>NAMA PEKERJAAN / KETERANGAN</span>
+                                    <input type="text" id="filterPekerjaan" onkeyup="saringTabel()" placeholder="Cari pekerjaan..." class="w-full border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500">
+                                </div>
+                            </th>
+                            <th class="px-4 py-3 align-top w-[14%]">TEMPAT / TUJUAN</th>
+                            <th class="px-4 py-3 text-center align-top w-[22%]">
+                                <div class="flex flex-col space-y-1 items-center">
+                                    <span>JENIS FORMULIR & NOMOR SURAT</span>
+                                    <select id="filterJenis" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full max-w-[240px] truncate">
+                                        <option value="">Semua Jenis</option>
+                                        <option value="F1 Ajuan Inventaris">F1 Ajuan Inventaris</option>
+                                        <option value="F2 Pengadaan Rutin">F2 Pengadaan Barang Persediaan Rutin</option>
+                                        <option value="F3 Pengadaan ATK">F3 Pengajuan Pengadaan Barang Atk</option>
+                                        <option value="F4 Peminjaman BMN">F4 Peminjaman Barang Inventaris</option>
+                                        <option value="F5 Penarikan Barang Inventaris">F5 Penarikan Barang Inventaris Ke Gudang BMN</option>
+                                        <option value="F6 Ajuan Perbaikan Dan Belanja Perbaikan">F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan</option>
+                                        <option value="F7 Pengajuan Pengadaan Jasa Operasional Perkantoran">F7 Pengajuan Pengadaan Jasa Operasional Perkantoran</option>
+                                        <option value="F8 Peminjaman Gedung/Ruang">F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma</option>
+                                        <option value="F9 Peminjaman Inventaris Kendaraan">F9 Peminjaman Inventaris Kendaraan Dinas</option>
+                                        <option value="F11 Berita Acara Serah Terima Distribusi Barang Inventaris">F11 Berita Acara Serah Terima Distribusi Barang Inventaris</option>
+                                        <option value="F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin">F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor</option>
+                                        <option value="F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan">F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan</option>
+                                        <option value="F14 Berita Acara Serah Terima Penggunaan Barang">F14 Berita Acara Serah Terima Penggunaan Barang</option>
+                                        <option value="F19 Formulir Pengembalian Inventaris Kendaraan Dinas">F19 Formulir Pengembalian Inventaris Kendaraan Dinas</option>
+                                        <option value="F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan">F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan</option>
+                                        <option value="Dokumen RKBMN">Dokumen RKBMN</option>
+                                        <option value="Dokumen Penetapan Status Penggunaan">Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan</option>
+                                        <option value="Dokumen Pemanfaatan BMN">Dokumen Pemanfaatan BMN (sewa, pinjam pakai)</option>
+                                        <option value="Dokumen pemindahtanganan">Dokumen pemindahtanganan/penghapusan/pemusnahan</option>
+                                        <option value="Dokumen lelang BMN">Dokumen lelang BMN</option>
+                                        <option value="Dokumen Inventarisasi BMN">Dokumen Inventarisasi BMN</option>
+                                        <option value="Dokumen Pengawasan dan Pengendalian">Dokumen Pengawasan dan Pengendalian</option>
+                                        <option value="Laporan Barang Milik Negara">Laporan Barang Milik Negara</option>
+                                        <option value="Dokumen penatausahaan BMN">Dokumen penatausahaan BMN</option>
+                                        <option value="Dokumen Persediaan">Dokumen Persediaan</option>
+                                    </select>
+                                </div>
+                            </th>
+                            <th class="px-4 py-3 text-center align-top w-[13%]">
+                                <div class="flex flex-col space-y-1 items-center">
+                                    <span>PIC BMN</span>
+                                    <select id="filterPIC" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full">
+                                        <option value="">Semua PIC</option>
+                                        <option value="Erwin Rzki Wardhani">Erwin Rzki Wardhani</option>
+                                        <option value="Surya Tantra">Surya Tantra</option>
+                                        <option value="Shodiq Ridwanu">Shodiq Ridwanu</option>
+                                        <option value="Giat Santoso">Giat Santoso</option>
+                                        <option value="Tedi Setiadi">Tedi Setiadi</option>
+                                        <option value="Resa Hilmawati">Resa Hilmawati</option>
+                                        <option value="Samantha Amin">Samantha Amin</option>
+                                        <option value="Asep Supri">Asep Supri</option>
+                                        <option value="Dikdik Hermawan">Dikdik Hermawan</option>
+                                    </select>
+                                </div>
+                            </th>
+                            <th class="px-3 py-3 text-center align-middle w-[10%]">TANGGAL</th>
+                            <th class="px-3 py-3 text-center align-middle w-20">AKSI</th>
+                        </tr>
+                    </thead>    
+                    <tbody id="tableBody" class="text-xs text-slate-700">
+                        <tr id="rowLoading">
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                <i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i>
+                                <p>Menarik data dari Google Spreadsheet...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= VIEW 2: REKAP NO SURAT ================= -->
+    <main id="viewRekap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 hidden pb-10">
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-[#1e3264]">Rekapitulasi Data Penomoran</h1>
+                <p class="text-slate-500 text-xs mt-0.5">Statistik dan Pivot Data Formulir Keseluruhan</p>
+            </div>
+            <button onclick="generateRekap()" class="bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs">
+                <i class="fas fa-sync-alt mr-1.5 text-slate-400"></i> Muat Ulang
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
+                <div class="bg-blue-100 text-blue-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-file-invoice"></i></div>
+                <div><p class="text-xs font-semibold text-slate-500">Total Surat Keluar</p><h3 id="rekapTotalSurat" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
+                <div class="bg-green-100 text-green-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-tags"></i></div>
+                <div><p class="text-xs font-semibold text-slate-500">Jenis Dipakai</p><h3 id="rekapTotalJenis" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
+                <div class="bg-purple-100 text-purple-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-user-tie"></i></div>
+                <div><p class="text-xs font-semibold text-slate-500">PIC BMN Terlibat</p><h3 id="rekapTotalPIC" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col h-[400px]">
+                <div class="px-4 py-3 border-b bg-slate-50 rounded-t-xl font-bold text-xs text-[#1e3264]">Peringkat Formulir Terbanyak</div>
+                <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapJenis"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col h-[400px]">
+                <div class="px-4 py-3 border-b bg-slate-50 rounded-t-xl font-bold text-xs text-[#1e3264]">Jumlah Formulir per PIC BMN</div>
+                <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapPIC"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Form Input/Edit (Ramah Orang Tua & Ukuran Lengkap) -->
+    <div id="modalOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-7 space-y-5 transform transition-all" id="modalContent">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                <h2 id="modalTitle" class="text-xl font-bold text-[#1e3264]">Tambah Ajuan Penomoran</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <input type="hidden" id="inputRowIndex" value="">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">PIC BMN</label>
+                    <select id="inputPicBmn" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">-- Pilih PIC BMN --</option>
+                        <option value="Erwin Rzki Wardhani">Erwin Rzki Wardhani</option>
+                        <option value="Surya Tantra">Surya Tantra</option>
+                        <option value="Shodiq Ridwanu">Shodiq Ridwanu</option>
+                        <option value="Giat Santoso">Giat Santoso</option>
+                        <option value="Tedi Setiadi">Tedi Setiadi</option>
+                        <option value="Resa Hilmawati">Resa Hilmawati</option>
+                        <option value="Samantha Amin">Samantha Amin</option>
+                        <option value="Asep Supri">Asep Supri</option>
+                        <option value="Dikdik Hermawan">Dikdik Hermawan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Jenis Formulir</label>
+                    <select id="inputJenisFormulir" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">-- Pilih Jenis Formulir --</option>
+                        <option value="F1 Ajuan Inventaris">F1 Ajuan Inventaris</option>
+                        <option value="F2 Pengadaan Rutin">F2 Pengadaan Barang Persediaan Rutin</option>
+                        <option value="F3 Pengadaan ATK">F3 Pengajuan Pengadaan Barang Atk</option>
+                        <option value="F4 Peminjaman BMN">F4 Peminjaman Barang Inventaris</option>
+                        <option value="F5 Penarikan Barang Inventaris">F5 Penarikan Barang Inventaris Ke Gudang BMN</option>
+                        <option value="F6 Ajuan Perbaikan Dan Belanja Perbaikan">F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan</option>
+                        <option value="F7 Pengajuan Pengadaan Jasa Operasional Perkantoran">F7 Pengajuan Pengadaan Jasa Operasional Perkantoran</option>
+                        <option value="F8 Peminjaman Gedung/Ruang">F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma</option>
+                        <option value="F9 Peminjaman Inventaris Kendaraan">F9 Peminjaman Inventaris Kendaraan Dinas</option>
+                        <option value="F11 Berita Acara Serah Terima Distribusi Barang Inventaris">F11 Berita Acara Serah Terima Distribusi Barang Inventaris</option>
+                        <option value="F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin">F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor</option>
+                        <option value="F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan">F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan</option>
+                        <option value="F14 Berita Acara Serah Terima Penggunaan Barang">F14 Berita Acara Serah Terima Penggunaan Barang</option>
+                        <option value="F19 Formulir Pengembalian Inventaris Kendaraan Dinas">F19 Formulir Pengembalian Inventaris Kendaraan Dinas</option>
+                        <option value="F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan">F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan</option>
+                        <option value="Dokumen RKBMN">Dokumen RKBMN</option>
+                        <option value="Dokumen Penetapan Status Penggunaan">Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan</option>
+                        <option value="Dokumen Pemanfaatan BMN">Dokumen Pemanfaatan BMN (sewa, pinjam pakai)</option>
+                        <option value="Dokumen pemindahtanganan">Dokumen pemindahtanganan/penghapusan/pemusnahan</option>
+                        <option value="Dokumen lelang BMN">Dokumen lelang BMN</option>
+                        <option value="Dokumen Inventarisasi BMN">Dokumen Inventarisasi BMN</option>
+                        <option value="Dokumen Pengawasan dan Pengendalian">Dokumen Pengawasan dan Pengendalian</option>
+                        <option value="Laporan Barang Milik Negara">Laporan Barang Milik Negara</option>
+                        <option value="Dokumen penatausahaan BMN">Dokumen penatausahaan BMN</option>
+                        <option value="Dokumen Persediaan">Dokumen Persediaan</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">Pekerjaan / Keterangan</label>
+                <textarea id="inputPekerjaan" rows="3" placeholder="Ketik nama pekerjaan atau keterangan surat..." class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Surat</label>
+                    <input id="inputTanggal" type="date" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Tempat / Tujuan Barang</label>
+                    <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200">
+                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors">Batal</button>
+                <button id="btnSimpan" onclick="simpanDataCloud()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md transition-colors flex items-center">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>Simpan ke Cloud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Spreadsheet -->
+    <div id="modalSpreadsheetOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+        <div class="bg-white w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden m-4">
+            <div class="flex justify-between items-center px-5 py-3 border-b">
+                <h2 class="text-base font-bold text-[#1e3264] flex items-center"><i class="fas fa-file-excel text-green-600 mr-2"></i> Spreadsheet Penomoran</h2>
+                <button onclick="closeModalSpreadsheet()" class="text-slate-400 hover:text-slate-600 bg-slate-100 h-7 w-7 rounded-full flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+            </div>
+            <div class="flex-1 w-full bg-slate-50 relative">
+                <iframe src="https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing" class="w-full h-full border-0 absolute inset-0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxP9QFTCg-F5vMplitz_A0D-GgrtNGVE_6ssMURAyfjipO8dQKnB2q3HoDsZU-rDWi/exec";
+        let globalDataList = [];
+
+        async function loadDataDariCloud() {
+            const tableBody = document.getElementById('tableBody');
+            const iconRefresh = document.getElementById('iconRefresh');
+            if(iconRefresh) iconRefresh.classList.add('rotate-180');
+
+            tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const result = await response.json();
+                tableBody.innerHTML = ''; 
+                
+                if(!result.data || result.data.length === 0) {
+                    globalDataList = [];
+                    tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data. Silakan Tambah Ajuan.</td></tr>`;
+                } else {
+                    globalDataList = result.data;
+                    [...result.data].reverse().forEach(item => renderRowData(item));
+                }
+                generateRekap();
+            } catch (error) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud.</td></tr>`;
+            }
+
+            setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDataDariCloud);
+
+        function renderRowData(data) {
+            const tableBody = document.getElementById('tableBody');
+            let displayTanggal = data.tanggal ? data.tanggal.split('T')[0] : '-';
+            let dateObj = displayTanggal !== '-' ? new Date(displayTanggal) : new Date();
+            
+            let namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
+            let formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-100 hover:bg-slate-50/80 transition-colors";
+            tr.dataset.jenis = data.jenis || '';
+            tr.dataset.pic = data.pic || '';
+            tr.dataset.pekerjaan = data.pekerjaan || '';
+
+            tr.innerHTML = `
+                <td class="px-3 py-2.5 text-center font-semibold text-slate-500">${data.no || '-'}</td>
+                <td class="px-4 py-2.5">
+                    <div class="font-semibold text-slate-800 line-clamp-2">${data.pekerjaan || '-'}</div>
+                </td>
+                <td class="px-4 py-2.5 text-slate-600">${data.tempat || '-'}</td>
+                <td class="px-4 py-2.5 text-center">
+                    <span class="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
+                    <div class="flex items-center justify-between bg-blue-50/80 border border-blue-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
+                        <span class="text-xs font-bold text-blue-700 tracking-wide">${data.nomorSurat || '-'}</span>
+                        <button onclick="salinNomorTabel(this)" class="bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all" title="Salin Nomor">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="px-4 py-2.5 text-center text-slate-700 font-medium">${data.pic || '-'}</td>
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                    <div class="font-bold text-slate-800 text-xs">${namaHari}</div>
+                    <div class="text-slate-600 text-[11px] font-medium mt-0.5">${formatTgl}</div>
+                </td>
+                <td class="px-3 py-2.5 text-center">
+                    <div class="flex items-center justify-center space-x-1">
+                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50 transition-colors" title="Edit">
+                            <i class="fas fa-pen text-[10px]"></i>
+                        </button>
+                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50 transition-colors" title="Download">
+                            <i class="fas fa-download text-[10px]"></i>
+                        </button>
+                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50 transition-colors" title="Hapus">
+                            <i class="far fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        }
+
+        function downloadDraft(button) {
+            window.open("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", '_blank');
+        }
+
+        function salinNomorTabel(button) {
+            const container = button.closest('div');
+            const teksNomor = container.querySelector('span').textContent.trim();
+            navigator.clipboard.writeText(teksNomor).then(() => {
+                button.className = "bg-emerald-600 text-white rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center";
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    button.className = "bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center";
+                    button.innerHTML = '<i class="far fa-copy"></i>';
+                }, 1500);
+            });
+        }
+
+        function switchView(viewName) {
+            document.getElementById('viewDataAjuan').classList.toggle('hidden', viewName !== 'ajuan');
+            document.getElementById('viewRekap').classList.toggle('hidden', viewName !== 'rekap');
+            document.getElementById('menuDataAjuan').className = viewName === 'ajuan' ? "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer" : "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+            document.getElementById('menuRekap').className = viewName === 'rekap' ? "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer" : "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+            if(viewName === 'rekap') generateRekap();
+        }
+
+        function generateRekap() {
+            const rows = document.querySelectorAll('#tableBody tr:not(#rowLoading)');
+            let total = rows.length;
+            let cJenis = {}, cPic = {};
+            rows.forEach(r => {
+                let j = r.dataset.jenis, p = r.dataset.pic;
+                if(j) cJenis[j] = (cJenis[j]||0)+1;
+                if(p) cPic[p] = (cPic[p]||0)+1;
+            });
+            document.getElementById('rekapTotalSurat').textContent = total;
+            document.getElementById('rekapTotalJenis').textContent = Object.keys(cJenis).length;
+            document.getElementById('rekapTotalPIC').textContent = Object.keys(cPic).length;
+
+            const rJenis = Object.entries(cJenis).sort((a,b)=>b[1]-a[1]);
+            const rPic = Object.entries(cPic).sort((a,b)=>b[1]-a[1]);
+
+            const cJ = document.getElementById('listRekapJenis');
+            cJ.innerHTML = rJenis.length === 0 ? '<div class="p-4 text-center text-slate-400 text-xs">Belum ada data</div>' : '';
+            rJenis.forEach(([k,v]) => {
+                let pct = total > 0 ? Math.round((v/total)*100) : 0;
+                cJ.innerHTML += `<div class="flex items-center justify-between p-3 border-b text-xs"><div class="flex-1 pr-3"><span class="font-medium text-slate-700">${k}</span><div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width:${pct}%"></div></div></div><span class="font-bold text-[#1e3264] text-sm">${v}</span></div>`;
+            });
+
+            const cP = document.getElementById('listRekapPIC');
+            cP.innerHTML = rPic.length === 0 ? '<div class="p-4 text-center text-slate-400 text-xs">Belum ada data</div>' : '';
+            rPic.forEach(([k,v]) => {
+                let pct = total > 0 ? Math.round((v/total)*100) : 0;
+                cP.innerHTML += `<div class="flex items-center justify-between p-3 border-b text-xs"><div class="flex-1 pr-3"><span class="font-medium text-slate-700">${k}</span><div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-purple-500 h-1.5 rounded-full" style="width:${pct}%"></div></div></div><span class="font-bold text-[#1e3264] text-sm">${v}</span></div>`;
+            });
+        }
+
+        function getBulanRomawi(tgl) {
+            const b = tgl ? new Date(tgl).getMonth() + 1 : 1;
+            return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][b];
+        }
+
+        function getNomorSuratReferensi(jenis, tgl) {
+            const romawi = getBulanRomawi(tgl);
+            const thn = tgl ? new Date(tgl).getFullYear() : new Date().getFullYear();
+            const kamus = {
+                "F1 Ajuan Inventaris": `F1/INV/${romawi}/BMN/${thn}`,
+                "F2 Pengadaan Rutin": `F2/PSD/${romawi}/BMN/${thn}`,
+                "F3 Pengadaan ATK": `F03/PB/${romawi}/BMN/${thn}`,
+                "F4 Peminjaman BMN": `F04.BI/${romawi}/BMN/${thn}`,
+                "F5 Penarikan Barang Inventaris": `F05.BI/${romawi}/BMN/${thn}`,
+                "F6 Ajuan Perbaikan Dan Belanja Perbaikan": `F06.AP/${romawi}/BMN/${thn}`,
+                "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran": `F07.PJ/${romawi}/BMN/${thn}`,
+                "F8 Peminjaman Gedung/Ruang": `P.GR/${romawi}/BMN/${thn}`,
+                "F9 Peminjaman Inventaris Kendaraan": `F09.IKD/${romawi}/BMN/${thn}`,
+                "F11 Berita Acara Serah Terima Distribusi Barang Inventaris": `F11.BAST.INV/${romawi}/BMN/${thn}`,
+                "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin": `F12/BAST-BP/${romawi}/BMN/${thn}`,
+                "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan": `F13.BAST.PB/${romawi}/BMN/${thn}`,
+                "F14 Berita Acara Serah Terima Penggunaan Barang": `F14.BAST.PU/${romawi}/BMN/${thn}`,
+                "F19 Formulir Pengembalian Inventaris Kendaraan Dinas": `F19.PE.IN/${romawi}/BMN/${thn}`,
+                "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan": `F23/PB/${romawi}/BMN/${thn}`,
+                "Dokumen RKBMN": `LK.00.00/${romawi}/${thn}`,
+                "Dokumen Penetapan Status Penggunaan": `LK.04.00/${romawi}/${thn}`,
+                "Dokumen Pemanfaatan BMN": `LK.05.02/${romawi}/${thn}`,
+                "Dokumen pemindahtanganan": `LK.06.01/${romawi}/${thn}`,
+                "Dokumen lelang BMN": `LK.01.03/${romawi}/${thn}`,
+                "Dokumen Inventarisasi BMN": `LK.03.04/${romawi}/${thn}`,
+                "Dokumen Pengawasan dan Pengendalian": `LK.00.02/${romawi}/${thn}`,
+                "Laporan Barang Milik Negara": `LK.05.05/${romawi}/${thn}`,
+                "Dokumen penatausahaan BMN": `LK.04.00/${romawi}/${thn}`,
+                "Dokumen Persediaan": `LK.05.02/${romawi}/${thn}`
+            };
+            return kamus[jenis] || `BMN/${romawi}/${thn}`;
+        }
+
+        function openModal() { document.getElementById('modalOverlay').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
+        function openModalSpreadsheet() { document.getElementById('modalSpreadsheetOverlay').classList.remove('hidden'); }
+        function closeModalSpreadsheet() { document.getElementById('modalSpreadsheetOverlay').classList.add('hidden'); }
+
+        function openModalTambah() {
+            document.getElementById('modalTitle').textContent = "Tambah Ajuan Penomoran";
+            document.getElementById('inputRowIndex').value = '';
+            document.getElementById('inputPicBmn').value = '';
+            document.getElementById('inputJenisFormulir').value = '';
+            document.getElementById('inputPekerjaan').value = '';
+            document.getElementById('inputTanggal').value = '';
+            document.getElementById('inputTempat').value = '';
+            openModal();
+        }
+
+        function openModalEdit(rowIndex) {
+            const item = globalDataList.find(i => i.rowIndex == rowIndex);
+            if (!item) return alert("Data tidak ditemukan!");
+            document.getElementById('modalTitle').textContent = "Edit Ajuan Penomoran";
+            document.getElementById('inputRowIndex').value = item.rowIndex;
+            document.getElementById('inputPicBmn').value = item.pic || '';
+            document.getElementById('inputJenisFormulir').value = item.jenis || '';
+            document.getElementById('inputPekerjaan').value = item.pekerjaan || '';
+            document.getElementById('inputTanggal').value = item.tanggal ? item.tanggal.split('T')[0] : '';
+            document.getElementById('inputTempat').value = item.tempat || '';
+            openModal();
+        }
+
+        async function simpanDataCloud() {
+            const rowIndex = document.getElementById('inputRowIndex').value;
+            const pic = document.getElementById('inputPicBmn').value;
+            const jenis = document.getElementById('inputJenisFormulir').value;
+            const pekerjaan = document.getElementById('inputPekerjaan').value;
+            const tanggal = document.getElementById('inputTanggal').value;
+            const tempat = document.getElementById('inputTempat').value;
+
+            if (!pic || !jenis || !pekerjaan || !tanggal || !tempat) {
+                alert("Harap lengkapi semua field!");
+                return;
+            }
+
+            const ref = getNomorSuratReferensi(jenis, tanggal);
+            let payload = { pic, jenis, pekerjaan, tanggal, tempat };
+
+            if (!rowIndex) {
+                payload.action = "add";
+                payload.referensiDasar = ref;
+            } else {
+                payload.action = "update";
+                payload.rowIndex = rowIndex;
+                const existing = globalDataList.find(i => i.rowIndex == rowIndex);
+                payload.nomorSurat = `${existing ? existing.no : '001'}/${ref}`;
+            }
+
+            const btn = document.getElementById('btnSimpan');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
+            btn.disabled = true;
+
+            try {
+                await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                closeModal();
+                loadDataDariCloud();
+            } catch (err) {
+                alert("Gagal menyimpan data.");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-1.5"></i>Simpan ke Cloud';
+                btn.disabled = false;
+            }
+        }
+
+        async function hapusDataCloud(rowIndex) {
+            if (!confirm("Yakin ingin menghapus data ini dari Cloud?")) return;
+            try {
+                await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", rowIndex: rowIndex }) });
+                loadDataDariCloud();
+            } catch (err) {
+                alert("Gagal menghapus data.");
+            }
+        }
+
+        function saringTabel() {
+            const q = document.getElementById("filterPekerjaan").value.toLowerCase();
+            const j = document.getElementById("filterJenis").value.toLowerCase();
+            const p = document.getElementById("filterPIC").value.toLowerCase();
+            
+            document.querySelectorAll("#tableBody tr:not(#rowLoading)").forEach(tr => {
+                const text = tr.innerText.toLowerCase();
+                tr.style.display = text.includes(q) && (j === "" || text.includes(j)) && (p === "" || text.includes(p)) ? "" : "none";
+            });
+        }
+    </script>
+</body>
+</html>
