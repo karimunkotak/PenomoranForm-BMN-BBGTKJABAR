@@ -16,8 +16,6 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Animasi Tab Settings */
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -54,7 +52,6 @@
 
     <!-- ================= VIEW 1: DATA AJUAN ================= -->
     <main id="viewDataAjuan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 transition-all duration-300">
-        
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
             <h1 class="text-xl font-bold text-[#1e3264]">Dashboard Data Penomoran</h1>
             <div class="flex items-center space-x-2.5 mt-2 sm:mt-0">
@@ -83,14 +80,12 @@
                             <th class="px-4 py-3 text-center align-top w-[22%]">
                                 <div class="flex flex-col space-y-1 items-center">
                                     <span>JENIS FORMULIR & NOMOR SURAT</span>
-                                    <!-- Dropdown Dinamis dari JS -->
                                     <select id="filterJenis" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full max-w-[240px] truncate"></select>
                                 </div>
                             </th>
                             <th class="px-4 py-3 text-center align-top w-[13%]">
                                 <div class="flex flex-col space-y-1 items-center">
                                     <span>PIC BMN</span>
-                                    <!-- Dropdown Dinamis dari JS -->
                                     <select id="filterPIC" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full"></select>
                                 </div>
                             </th>
@@ -213,7 +208,6 @@
     <!-- ================= MODAL PENGATURAN (SETTINGS) ================= -->
     <div id="modalSettingsOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center px-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
-            
             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50">
                 <h2 class="text-xl font-bold text-[#1e3264] flex items-center">
                     <i class="fas fa-cog text-amber-500 mr-2"></i> Pengaturan Sistem
@@ -223,7 +217,6 @@
                 </button>
             </div>
 
-            <!-- Tabs Nav -->
             <div class="flex px-6 pt-3 border-b border-slate-200 bg-slate-50">
                 <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">Jenis Formulir & Format</button>
                 <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Daftar PIC BMN</button>
@@ -235,13 +228,11 @@
                 <div class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <h3 class="text-sm font-bold text-blue-800 mb-2">Tambah Jenis Formulir Baru</h3>
                     <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F30 Peminjaman Kunci)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisFormat" placeholder="Format (Contoh: F30/PK/{romawi}/BMN/{thn})" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" title="Gunakan {romawi} untuk otomatisasi bulan dan {thn} untuk tahun.">
+                        <input type="text" id="setJenisNama" placeholder="Nama Formulir..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisFormat" placeholder="Format (Contoh: F30/PK/{romawi}/BMN/{thn})" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <button onclick="tambahSettingJenis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Tambah</button>
                     </div>
-                    <p class="text-[11px] text-blue-600 mt-2 font-medium"><i class="fas fa-info-circle mr-1"></i> <b>Tips:</b> Gunakan tag <code>{romawi}</code> agar bulan otomatis menyesuaikan tanggal (I, II, dst) dan <code>{thn}</code> untuk tahun (2026).</p>
                 </div>
-                
                 <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
                     <thead class="bg-slate-100 text-xs text-slate-600">
                         <tr>
@@ -250,9 +241,7 @@
                             <th class="px-3 py-2 border-b w-[15%] text-center">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodySettingJenis" class="text-sm text-slate-700">
-                        <!-- Rendered by JS -->
-                    </tbody>
+                    <tbody id="tbodySettingJenis" class="text-sm text-slate-700"></tbody>
                 </table>
             </div>
 
@@ -265,7 +254,6 @@
                     </div>
                     <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
                 </div>
-
                 <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
                     <thead class="bg-slate-100 text-xs text-slate-600">
                         <tr>
@@ -274,62 +262,39 @@
                             <th class="px-4 py-2 border-b w-28 text-center">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodySettingPic" class="text-sm text-slate-700">
-                        <!-- Rendered by JS -->
-                    </tbody>
+                    <tbody id="tbodySettingPic" class="text-sm text-slate-700"></tbody>
                 </table>
             </div>
 
             <!-- Tab Content: Sistem -->
             <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                <div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start space-x-3">
-                    <i class="fas fa-shield-alt text-amber-500 text-xl mt-0.5"></i>
-                    <div>
-                        <h3 class="text-sm font-bold text-amber-800">Kawasan Dilindungi (Admin Only)</h3>
-                        <p class="text-xs text-amber-700 mt-1">Perubahan pada pengaturan ini memerlukan <b>PIN Rahasia</b> demi menjaga keamanan sistem dari perubahan tak disengaja.</p>
-                    </div>
-                </div>
-
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Apps Script (Database API)</label>
-                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" placeholder="https://script.google.com/macros/s/.../exec">
-                        <p class="text-[11px] text-slate-500 mt-1">Ubah URL ini jika Anda men-deploy ulang Google Script ke versi/spreadsheet yang baru.</p>
+                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Spreadsheet (Untuk Tampilan Excel)</label>
-                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" placeholder="https://docs.google.com/spreadsheets/d/.../edit?usp=sharing">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Spreadsheet</label>
+                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
                 <div class="mt-6 pt-5 border-t border-slate-200 flex justify-between items-center">
-                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Kembalikan Semua ke Pengaturan Awal (Reset)</button>
+                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan</button>
                     <button onclick="simpanPengaturanSistem()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors">
                         <i class="fas fa-lock mr-1.5"></i> Simpan URL Sistem
                     </button>
                 </div>
             </div>
-
         </div>
     </div>
 
     <!-- Scripts -->
     <script>
-        // ==========================================
-        // KONFIGURASI KEAMANAN (UBAH PIN DI SINI)
-        // ==========================================
         const PIN_ADMIN = "123456";
-
-        // ==========================================
-        // DATA DEFAULT (JIKA LOCALSTORAGE KOSONG)
-        // ==========================================
         const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxxP9QFTCg-F5vMplitz_A0D-GgrtNGVE_6ssMURAyfjipO8dQKnB2q3HoDsZU-rDWi/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
-        const DEFAULT_PICS = [
-            "Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", 
-            "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"
-        ];
-
+        const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         const DEFAULT_JENIS = [
             { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}" },
             { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}" },
@@ -358,81 +323,78 @@
             { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}" }
         ];
 
-        // Global Variables
         let globalDataList = [];
         let curAPIUrl = localStorage.getItem('bmn_api_url') || DEFAULT_URL_API;
         let curSheetUrl = localStorage.getItem('bmn_sheet_url') || DEFAULT_URL_SHEET;
         let listPics = JSON.parse(localStorage.getItem('bmn_pics')) || DEFAULT_PICS;
         let listJenis = JSON.parse(localStorage.getItem('bmn_jenis')) || DEFAULT_JENIS;
 
-        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             renderDropdownsDinamis();
             loadDataDariCloud();
         });
 
-        // ==========================================
-        // FITUR PENGATURAN (SETTINGS)
-        // ==========================================
+        // =========================================================================
+        // FIX UTAMA: PARSER TANGGAL PRESISI TAHUN-BULAN-HARI (ANTI-GESER UTC)
+        // =========================================================================
+        function parseTanggalLokal(tglString) {
+            if (!tglString) return new Date();
+            // Ambil murni string tanggal depannya saja (mengabaikan format T...Z dari JSON)
+            const cleanStr = String(tglString).split('T')[0];
+            const parts = cleanStr.split('-');
+            
+            if (parts.length === 3) {
+                // Paksa buat objek Date dengan konstruktor lokal (Tahun, Bulan 0-11, Tanggal)
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            return new Date(tglString);
+        }
+
         function openModalSettings() {
             document.getElementById('modalSettingsOverlay').classList.remove('hidden');
             renderSettingTables();
             document.getElementById('setAppUrl').value = curAPIUrl;
             document.getElementById('setSheetUrl').value = curSheetUrl;
         }
-
-        function closeModalSettings() {
-            document.getElementById('modalSettingsOverlay').classList.add('hidden');
-        }
+        function closeModalSettings() { document.getElementById('modalSettingsOverlay').classList.add('hidden'); }
 
         function openSettingTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-
-            // Reset tab styling
             ['btn-tab-jenis', 'btn-tab-pic', 'btn-tab-sistem'].forEach(id => {
-                const btn = document.getElementById(id);
-                btn.className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+                document.getElementById(id).className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
             });
-
-            const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors";
+            document.getElementById('btn-' + tabId).className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors";
         }
 
         function renderSettingTables() {
-            // Render Jenis Formulir
-            const tbJenis = document.getElementById('tbodySettingJenis');
-            tbJenis.innerHTML = listJenis.map((j, idx) => `
+            document.getElementById('tbodySettingJenis').innerHTML = listJenis.map((j, idx) => `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="px-3 py-2 font-medium">${j.nama}</td>
                     <td class="px-3 py-2 font-mono text-xs text-blue-700">${j.format}</td>
                     <td class="px-3 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
+                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
+                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
 
-            // Render PIC
-            const tbPic = document.getElementById('tbodySettingPic');
-            tbPic.innerHTML = listPics.map((p, idx) => `
+            document.getElementById('tbodySettingPic').innerHTML = listPics.map((p, idx) => `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="px-4 py-2 text-center text-slate-400">${idx + 1}</td>
                     <td class="px-4 py-2 font-medium">${p}</td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingPic(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
+                        <button onclick="editSettingPic(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
+                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // --- Fungsi Tambah, Edit, Hapus Jenis Formulir ---
         function tambahSettingJenis() {
             const nama = document.getElementById('setJenisNama').value.trim();
             const format = document.getElementById('setJenisFormat').value.trim();
             if(!nama || !format) return alert("Nama dan format harus diisi!");
-            
             listJenis.push({ nama, format });
             saveSettingsAndUpdate();
             document.getElementById('setJenisNama').value = '';
@@ -441,34 +403,30 @@
 
         function editSettingJenis(idx) {
             const namaBaru = prompt("Ubah Nama Jenis Formulir:", listJenis[idx].nama);
-            if (namaBaru === null || namaBaru.trim() === "") return; // Batal atau kosong
-            
-            const formatBaru = prompt("Ubah Format Penomoran (Gunakan {romawi} & {thn}):", listJenis[idx].format);
+            if (namaBaru === null || namaBaru.trim() === "") return;
+            const formatBaru = prompt("Ubah Format Penomoran:", listJenis[idx].format);
             if (formatBaru === null || formatBaru.trim() === "") return;
-            
             listJenis[idx].nama = namaBaru.trim();
             listJenis[idx].format = formatBaru.trim();
             saveSettingsAndUpdate();
         }
 
         function hapusSettingJenis(idx) {
-            if(!confirm("Hapus jenis formulir ini?")) return;
+            if(!confirm("Hapus jenis ini?")) return;
             listJenis.splice(idx, 1);
             saveSettingsAndUpdate();
         }
 
-        // --- Fungsi Tambah, Edit, Hapus PIC BMN ---
         function tambahSettingPic() {
             const nama = document.getElementById('setPicNama').value.trim();
             if(!nama) return alert("Nama PIC harus diisi!");
-            
             listPics.push(nama);
             saveSettingsAndUpdate();
             document.getElementById('setPicNama').value = '';
         }
 
         function editSettingPic(idx) {
-            const namaBaru = prompt("Ubah Nama Lengkap PIC BMN:", listPics[idx]);
+            const namaBaru = prompt("Ubah Nama PIC:", listPics[idx]);
             if (namaBaru !== null && namaBaru.trim() !== "") {
                 listPics[idx] = namaBaru.trim();
                 saveSettingsAndUpdate();
@@ -481,44 +439,29 @@
             saveSettingsAndUpdate();
         }
 
-        // --- Fungsi Keamanan & Penyimpanan Sistem ---
         function simpanPengaturanSistem() {
-            const pin = prompt("🔒 Masukkan PIN Rahasia Admin untuk menyimpan URL Sistem (Default: 123456):");
-            if (pin !== PIN_ADMIN) {
-                alert("❌ PIN Salah atau Dibatalkan! Perubahan gagal disimpan.");
-                return;
-            }
-
+            const pin = prompt("🔒 Masukkan PIN Admin:");
+            if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
             const api = document.getElementById('setAppUrl').value.trim();
             const sheet = document.getElementById('setSheetUrl').value.trim();
             if(api) { curAPIUrl = api; localStorage.setItem('bmn_api_url', api); }
             if(sheet) { curSheetUrl = sheet; localStorage.setItem('bmn_sheet_url', sheet); }
-            alert("✅ Pengaturan Sistem Berhasil Disimpan!");
+            alert("✅ Berhasil disimpan!");
             closeModalSettings();
-            loadDataDariCloud(); // Refresh data dengan URL baru
+            loadDataDariCloud();
         }
 
         function resetPengaturanDefault() {
-            if(!confirm("PERINGATAN: Semua daftar PIC, Jenis Formulir, dan URL yang Anda tambah akan dihapus & kembali ke setelan pabrik. Lanjutkan?")) return;
-            
-            const pin = prompt("🔒 Masukkan PIN Rahasia Admin untuk me-reset sistem:");
-            if (pin !== PIN_ADMIN) {
-                alert("❌ PIN Salah! Reset dibatalkan.");
-                return;
-            }
-
-            localStorage.removeItem('bmn_pics');
-            localStorage.removeItem('bmn_jenis');
-            localStorage.removeItem('bmn_api_url');
-            localStorage.removeItem('bmn_sheet_url');
-            
+            if(!confirm("Reset pengaturan?")) return;
+            const pin = prompt("🔒 Masukkan PIN Admin:");
+            if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
+            localStorage.clear();
             listPics = [...DEFAULT_PICS];
             listJenis = [...DEFAULT_JENIS];
             curAPIUrl = DEFAULT_URL_API;
             curSheetUrl = DEFAULT_URL_SHEET;
-            
             saveSettingsAndUpdate();
-            alert("✅ Sistem berhasil direset ke bawaan pabrik.");
+            alert("✅ Berhasil direset.");
             closeModalSettings();
             loadDataDariCloud();
         }
@@ -530,25 +473,13 @@
             renderDropdownsDinamis();
         }
 
-        // ==========================================
-        // RENDER DROPDOWN OTOMATIS
-        // ==========================================
         function renderDropdownsDinamis() {
-            const optPicFilter = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            const optPicInput = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            
-            const optJenisFilter = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
-            const optJenisInput = '<option value="">-- Pilih Jenis Formulir --</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
-
-            document.getElementById('filterPIC').innerHTML = optPicFilter;
-            document.getElementById('inputPicBmn').innerHTML = optPicInput;
-            document.getElementById('filterJenis').innerHTML = optJenisFilter;
-            document.getElementById('inputJenisFormulir').innerHTML = optJenisInput;
+            document.getElementById('filterPIC').innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
+            document.getElementById('inputPicBmn').innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
+            document.getElementById('filterJenis').innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            document.getElementById('inputJenisFormulir').innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
         }
 
-        // ==========================================
-        // FUNGSI UTAMA (API & DATA)
-        // ==========================================
         async function loadDataDariCloud() {
             const tableBody = document.getElementById('tableBody');
             const iconRefresh = document.getElementById('iconRefresh');
@@ -563,23 +494,21 @@
                 
                 if(!result.data || result.data.length === 0) {
                     globalDataList = [];
-                    tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data. Silakan Tambah Ajuan.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
                 } else {
                     globalDataList = result.data;
                     [...result.data].reverse().forEach(item => renderRowData(item));
                 }
                 generateRekap();
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan URL Script benar.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud.</td></tr>`;
             }
-
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
         }
 
         function renderRowData(data) {
             const tableBody = document.getElementById('tableBody');
-            let displayTanggal = data.tanggal ? data.tanggal.split('T')[0] : '-';
-            let dateObj = displayTanggal !== '-' ? new Date(displayTanggal) : new Date();
+            let dateObj = parseTanggalLokal(data.tanggal);
             
             let namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
             let formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -592,17 +521,13 @@
 
             tr.innerHTML = `
                 <td class="px-3 py-2.5 text-center font-semibold text-slate-500">${data.no || '-'}</td>
-                <td class="px-4 py-2.5">
-                    <div class="font-semibold text-slate-800 line-clamp-2">${data.pekerjaan || '-'}</div>
-                </td>
+                <td class="px-4 py-2.5"><div class="font-semibold text-slate-800 line-clamp-2">${data.pekerjaan || '-'}</div></td>
                 <td class="px-4 py-2.5 text-slate-600">${data.tempat || '-'}</td>
                 <td class="px-4 py-2.5 text-center">
                     <span class="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
                     <div class="flex items-center justify-between bg-blue-50/80 border border-blue-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
                         <span class="text-xs font-bold text-blue-700 tracking-wide">${data.nomorSurat || '-'}</span>
-                        <button onclick="salinNomorTabel(this)" class="bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all" title="Salin Nomor">
-                            <i class="far fa-copy"></i>
-                        </button>
+                        <button onclick="salinNomorTabel(this)" class="bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all"><i class="far fa-copy"></i></button>
                     </div>
                 </td>
                 <td class="px-4 py-2.5 text-center text-slate-700 font-medium">${data.pic || '-'}</td>
@@ -612,24 +537,15 @@
                 </td>
                 <td class="px-3 py-2.5 text-center">
                     <div class="flex items-center justify-center space-x-1">
-                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50 transition-colors" title="Edit">
-                            <i class="fas fa-pen text-[10px]"></i>
-                        </button>
-                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50 transition-colors" title="Download">
-                            <i class="fas fa-download text-[10px]"></i>
-                        </button>
-                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50 transition-colors" title="Hapus">
-                            <i class="far fa-trash-alt text-[10px]"></i>
-                        </button>
+                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
+                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download"><i class="fas fa-download text-[10px]"></i></button>
+                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </td>
             `;
             tableBody.appendChild(tr);
         }
 
-        // ==========================================
-        // FUNGSI UTILITIES (SALIN, FILTER, DLL)
-        // ==========================================
         function downloadDraft(button) { window.open("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", '_blank'); }
 
         function salinNomorTabel(button) {
@@ -648,11 +564,9 @@
         function switchView(viewName) {
             document.getElementById('viewDataAjuan').classList.toggle('hidden', viewName !== 'ajuan');
             document.getElementById('viewRekap').classList.toggle('hidden', viewName !== 'rekap');
-            
             const baseClass = "px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer ";
             document.getElementById('menuDataAjuan').className = baseClass + (viewName === 'ajuan' ? "bg-white/10 text-white border border-white/20" : "text-slate-300 hover:text-white hover:bg-white/5");
             document.getElementById('menuRekap').className = baseClass + (viewName === 'rekap' ? "bg-white/10 text-white border border-white/20" : "text-slate-300 hover:text-white hover:bg-white/5");
-            
             if(viewName === 'rekap') generateRekap();
         }
 
@@ -660,7 +574,6 @@
             const q = document.getElementById("filterPekerjaan").value.toLowerCase();
             const j = document.getElementById("filterJenis").value.toLowerCase();
             const p = document.getElementById("filterPIC").value.toLowerCase();
-            
             document.querySelectorAll("#tableBody tr:not(#rowLoading)").forEach(tr => {
                 const text = tr.innerText.toLowerCase();
                 tr.style.display = text.includes(q) && (j === "" || text.includes(j)) && (p === "" || text.includes(p)) ? "" : "none";
@@ -675,23 +588,18 @@
         function openModal() { document.getElementById('modalOverlay').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
 
-        // ==========================================
-        // FUNGSI FORMULIR & CLOUD
-        // ==========================================
         function getBulanRomawi(tgl) {
-            const b = tgl ? new Date(tgl).getMonth() + 1 : 1;
+            const dateObj = parseTanggalLokal(tgl);
+            const b = dateObj.getMonth() + 1;
             return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][b];
         }
 
         function getNomorSuratReferensi(jenis, tgl) {
+            const dateObj = parseTanggalLokal(tgl);
             const romawi = getBulanRomawi(tgl);
-            const thn = tgl ? new Date(tgl).getFullYear() : new Date().getFullYear();
-            
-            // Cari rumus/format dari list dinamis
+            const thn = dateObj.getFullYear();
             const found = listJenis.find(item => item.nama === jenis);
-            let formatTemplate = found ? found.format : "BMN/{romawi}/{thn}"; // Fallback jika tidak ketemu
-            
-            // Ganti {romawi} dan {thn} dengan aslinya
+            let formatTemplate = found ? found.format : "BMN/{romawi}/{thn}";
             return formatTemplate.replace(/{romawi}/g, romawi).replace(/{thn}/g, thn);
         }
 
@@ -727,10 +635,7 @@
             const tanggal = document.getElementById('inputTanggal').value;
             const tempat = document.getElementById('inputTempat').value;
 
-            if (!pic || !jenis || !pekerjaan || !tanggal || !tempat) {
-                alert("Harap lengkapi semua field!");
-                return;
-            }
+            if (!pic || !jenis || !pekerjaan || !tanggal || !tempat) return alert("Harap lengkapi semua field!");
 
             const ref = getNomorSuratReferensi(jenis, tanggal);
             let payload = { pic, jenis, pekerjaan, tanggal, tempat };
@@ -762,7 +667,7 @@
         }
 
         async function hapusDataCloud(rowIndex) {
-            if (!confirm("Yakin ingin menghapus data ini dari Cloud?")) return;
+            if (!confirm("Yakin ingin menghapus data ini?")) return;
             try {
                 await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify({ action: "delete", rowIndex: rowIndex }) });
                 loadDataDariCloud();
