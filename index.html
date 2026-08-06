@@ -291,9 +291,12 @@
     <!-- Scripts -->
     <script>
         const PIN_ADMIN = "123456";
-        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxxP9QFTCg-F5vMplitz_A0D-GgrtNGVE_6ssMURAyfjipO8dQKnB2q3HoDsZU-rDWi/exec";
+        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbzSwXV36U6a2UhG6Zlq3sQPT1nVNwP9icdC3BhNB4SAE00bZLAs1SageZP4cOAoHw2V/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
+        // FIX KUNCI: Menghapus cache lokal agar browser terpaksa memanggil API yang paling baru!
+        localStorage.setItem('bmn_api_url', DEFAULT_URL_API);
+
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         const DEFAULT_JENIS = [
             { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}" },
@@ -324,7 +327,7 @@
         ];
 
         let globalDataList = [];
-        let curAPIUrl = localStorage.getItem('bmn_api_url') || DEFAULT_URL_API;
+        let curAPIUrl = DEFAULT_URL_API;
         let curSheetUrl = localStorage.getItem('bmn_sheet_url') || DEFAULT_URL_SHEET;
         let listPics = JSON.parse(localStorage.getItem('bmn_pics')) || DEFAULT_PICS;
         let listJenis = JSON.parse(localStorage.getItem('bmn_jenis')) || DEFAULT_JENIS;
@@ -334,20 +337,32 @@
             loadDataDariCloud();
         });
 
-        // =========================================================================
-        // FIX UTAMA: PARSER TANGGAL PRESISI TAHUN-BULAN-HARI (ANTI-GESER UTC)
-        // =========================================================================
+        // PARSER SAKTI ANTI ERROR (Bisa baca string potong, format garis, atau bawaan Google)
         function parseTanggalLokal(tglString) {
-            if (!tglString) return new Date();
-            // Ambil murni string tanggal depannya saja (mengabaikan format T...Z dari JSON)
-            const cleanStr = String(tglString).split('T')[0];
-            const parts = cleanStr.split('-');
-            
-            if (parts.length === 3) {
-                // Paksa buat objek Date dengan konstruktor lokal (Tahun, Bulan 0-11, Tanggal)
-                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
+
+            const str = String(tglString).trim();
+
+            // 1. Uji baca normal (contoh: "2026-08-05" atau standar waktu)
+            let parsed = new Date(str);
+            if (!isNaN(parsed.getTime())) return parsed;
+
+            // 2. Kalau Google ngirim tulisan terpotong (contoh: "Wed Aug 05 2026 00:00:00 GM")
+            if (str.length >= 15 && (str.includes(" GM") || /^[A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}/.test(str))) {
+                parsed = new Date(str.substring(0, 15)); // Hanya ambil "Wed Aug 05 2026"
+                if (!isNaN(parsed.getTime())) return parsed;
             }
-            return new Date(tglString);
+
+            // 3. Kalau ngirim format DD/MM/YYYY atau DD-MM-YYYY
+            const parts = str.split(/[\/\-]/);
+            if (parts.length === 3) {
+                let p1 = parseInt(parts[0]), p2 = parseInt(parts[1]) - 1, p3 = parseInt(parts[2]);
+                if (p1 > 1000) parsed = new Date(p1, p2, p3);
+                else if (p3 > 1000) parsed = new Date(p3, p2, p1);
+                if (!isNaN(parsed.getTime())) return parsed;
+            }
+
+            return null;
         }
 
         function openModalSettings() {
@@ -510,8 +525,16 @@
             const tableBody = document.getElementById('tableBody');
             let dateObj = parseTanggalLokal(data.tanggal);
             
-            let namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
-            let formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            let namaHari = '-';
+            let formatTgl = '-';
+
+            if (dateObj) {
+                namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
+                formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            } else if (data.tanggal) {
+                // Menjaga agar tampilan tidak tembus / jelek jika string-nya aneh
+                formatTgl = String(data.tanggal).substring(0, 15);
+            }
 
             const tr = document.createElement('tr');
             tr.className = "border-b border-slate-100 hover:bg-slate-50/80 transition-colors";
@@ -590,14 +613,15 @@
 
         function getBulanRomawi(tgl) {
             const dateObj = parseTanggalLokal(tgl);
+            if (!dateObj) return "VIII";
             const b = dateObj.getMonth() + 1;
-            return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][b];
+            return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][b] || "VIII";
         }
 
         function getNomorSuratReferensi(jenis, tgl) {
             const dateObj = parseTanggalLokal(tgl);
             const romawi = getBulanRomawi(tgl);
-            const thn = dateObj.getFullYear();
+            const thn = (dateObj && !isNaN(dateObj.getFullYear())) ? dateObj.getFullYear() : 2026;
             const found = listJenis.find(item => item.nama === jenis);
             let formatTemplate = found ? found.format : "BMN/{romawi}/{thn}";
             return formatTemplate.replace(/{romawi}/g, romawi).replace(/{thn}/g, thn);
@@ -622,7 +646,14 @@
             document.getElementById('inputPicBmn').value = item.pic || '';
             document.getElementById('inputJenisFormulir').value = item.jenis || '';
             document.getElementById('inputPekerjaan').value = item.pekerjaan || '';
-            document.getElementById('inputTanggal').value = item.tanggal ? item.tanggal.split('T')[0] : '';
+            
+            let dateVal = '';
+            if (item.tanggal) {
+                let parsed = parseTanggalLokal(item.tanggal);
+                if (parsed) dateVal = parsed.toISOString().split('T')[0];
+            }
+            document.getElementById('inputTanggal').value = dateVal;
+            
             document.getElementById('inputTempat').value = item.tempat || '';
             openModal();
         }
