@@ -294,9 +294,6 @@
         const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbzSwXV36U6a2UhG6Zlq3sQPT1nVNwP9icdC3BhNB4SAE00bZLAs1SageZP4cOAoHw2V/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
-        // FIX KUNCI: Menghapus cache lokal agar browser terpaksa memanggil API yang paling baru!
-        localStorage.setItem('bmn_api_url', DEFAULT_URL_API);
-
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         const DEFAULT_JENIS = [
             { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}" },
@@ -327,7 +324,7 @@
         ];
 
         let globalDataList = [];
-        let curAPIUrl = DEFAULT_URL_API;
+        let curAPIUrl = localStorage.getItem('bmn_api_url') || DEFAULT_URL_API;
         let curSheetUrl = localStorage.getItem('bmn_sheet_url') || DEFAULT_URL_SHEET;
         let listPics = JSON.parse(localStorage.getItem('bmn_pics')) || DEFAULT_PICS;
         let listJenis = JSON.parse(localStorage.getItem('bmn_jenis')) || DEFAULT_JENIS;
@@ -337,23 +334,20 @@
             loadDataDariCloud();
         });
 
-        // PARSER SAKTI ANTI ERROR (Bisa baca string potong, format garis, atau bawaan Google)
+        // Parser Tanggal Handal
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
 
             const str = String(tglString).trim();
 
-            // 1. Uji baca normal (contoh: "2026-08-05" atau standar waktu)
             let parsed = new Date(str);
             if (!isNaN(parsed.getTime())) return parsed;
 
-            // 2. Kalau Google ngirim tulisan terpotong (contoh: "Wed Aug 05 2026 00:00:00 GM")
             if (str.length >= 15 && (str.includes(" GM") || /^[A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}/.test(str))) {
-                parsed = new Date(str.substring(0, 15)); // Hanya ambil "Wed Aug 05 2026"
+                parsed = new Date(str.substring(0, 15));
                 if (!isNaN(parsed.getTime())) return parsed;
             }
 
-            // 3. Kalau ngirim format DD/MM/YYYY atau DD-MM-YYYY
             const parts = str.split(/[\/\-]/);
             if (parts.length === 3) {
                 let p1 = parseInt(parts[0]), p2 = parseInt(parts[1]) - 1, p3 = parseInt(parts[2]);
@@ -503,7 +497,13 @@
             tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
 
             try {
-                const response = await fetch(curAPIUrl);
+                // ==========================================
+                // FIX AMPUH: CACHE BUSTER!
+                // Mencegah browser menarik data lawas yang nyangkut di memori.
+                // ==========================================
+                const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                
+                const response = await fetch(antiCacheUrl);
                 const result = await response.json();
                 tableBody.innerHTML = ''; 
                 
@@ -516,7 +516,7 @@
                 }
                 generateRekap();
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan URL API sudah benar.</td></tr>`;
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
         }
@@ -532,7 +532,6 @@
                 namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
                 formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             } else if (data.tanggal) {
-                // Menjaga agar tampilan tidak tembus / jelek jika string-nya aneh
                 formatTgl = String(data.tanggal).substring(0, 15);
             }
 
