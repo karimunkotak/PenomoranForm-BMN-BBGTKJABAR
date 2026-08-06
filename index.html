@@ -334,27 +334,24 @@
             loadDataDariCloud();
         });
 
-        // Parser Tanggal Handal
+        // PARSER ANTI-GAGAL: Menangani format YYYY-MM-DD mentah secara presisi
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
 
             const str = String(tglString).trim();
 
+            // Jika format YYYY-MM-DD mentah (seperti "2026-08-06")
+            const partsIso = str.split('T')[0].split('-');
+            if (partsIso.length === 3) {
+                const y = parseInt(partsIso[0]), m = parseInt(partsIso[1]) - 1, d = parseInt(partsIso[2]);
+                if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                    return new Date(y, m, d); // Pembuatan objek tanggal lokal murni tanpa geser zona waktu
+                }
+            }
+
+            // Fallback teks panjang atau format lain
             let parsed = new Date(str);
             if (!isNaN(parsed.getTime())) return parsed;
-
-            if (str.length >= 15 && (str.includes(" GM") || /^[A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}/.test(str))) {
-                parsed = new Date(str.substring(0, 15));
-                if (!isNaN(parsed.getTime())) return parsed;
-            }
-
-            const parts = str.split(/[\/\-]/);
-            if (parts.length === 3) {
-                let p1 = parseInt(parts[0]), p2 = parseInt(parts[1]) - 1, p3 = parseInt(parts[2]);
-                if (p1 > 1000) parsed = new Date(p1, p2, p3);
-                else if (p3 > 1000) parsed = new Date(p3, p2, p1);
-                if (!isNaN(parsed.getTime())) return parsed;
-            }
 
             return null;
         }
@@ -497,12 +494,7 @@
             tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
 
             try {
-                // ==========================================
-                // FIX AMPUH: CACHE BUSTER!
-                // Mencegah browser menarik data lawas yang nyangkut di memori.
-                // ==========================================
                 const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
-                
                 const response = await fetch(antiCacheUrl);
                 const result = await response.json();
                 tableBody.innerHTML = ''; 
@@ -516,7 +508,7 @@
                 }
                 generateRekap();
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan URL API sudah benar.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud.</td></tr>`;
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
         }
@@ -532,7 +524,7 @@
                 namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
                 formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             } else if (data.tanggal) {
-                formatTgl = String(data.tanggal).substring(0, 15);
+                formatTgl = String(data.tanggal);
             }
 
             const tr = document.createElement('tr');
@@ -649,7 +641,12 @@
             let dateVal = '';
             if (item.tanggal) {
                 let parsed = parseTanggalLokal(item.tanggal);
-                if (parsed) dateVal = parsed.toISOString().split('T')[0];
+                if (parsed && !isNaN(parsed.getTime())) {
+                    const y = parsed.getFullYear();
+                    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const d = String(parsed.getDate()).padStart(2, '0');
+                    dateVal = `${y}-${m}-${d}`;
+                }
             }
             document.getElementById('inputTanggal').value = dateVal;
             
