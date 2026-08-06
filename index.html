@@ -334,22 +334,29 @@
             loadDataDariCloud();
         });
 
-        // PARSER ANTI-GAGAL: Menangani format YYYY-MM-DD mentah secara presisi
+        // PARSER FINAL ANTI-GAGAL: Membersihkan format teks mentah ber-jam maupun YYYY-MM-DD
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
 
-            const str = String(tglString).trim();
+            let str = String(tglString).trim();
 
-            // Jika format YYYY-MM-DD mentah (seperti "2026-08-06")
+            // Jika format teks Google ber-jam (contoh: "Wed Aug 05 2026 00:00:00 GMT...")
+            if (str.includes(" GMT") || str.includes(" 00:00:00")) {
+                let cleanDateStr = str.split(' 00:00:00')[0]; // Ambil "Wed Aug 05 2026"
+                let parsed = new Date(cleanDateStr);
+                if (!isNaN(parsed.getTime())) return parsed;
+            }
+
+            // Jika format YYYY-MM-DD mentah (contoh: "2026-08-06")
             const partsIso = str.split('T')[0].split('-');
             if (partsIso.length === 3) {
                 const y = parseInt(partsIso[0]), m = parseInt(partsIso[1]) - 1, d = parseInt(partsIso[2]);
                 if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-                    return new Date(y, m, d); // Pembuatan objek tanggal lokal murni tanpa geser zona waktu
+                    return new Date(y, m, d);
                 }
             }
 
-            // Fallback teks panjang atau format lain
+            // Fallback umum
             let parsed = new Date(str);
             if (!isNaN(parsed.getTime())) return parsed;
 
