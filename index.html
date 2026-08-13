@@ -352,7 +352,7 @@
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
             let str = String(tglString).trim();
-            if (str.startsWith("'")) str = str.substring(1); // Hilangkan petik satu jika terbaca
+            if (str.startsWith("'")) str = str.substring(1);
             if (str.includes(" GMT") || str.includes(" 00:00:00")) {
                 let cleanDateStr = str.split(' 00:00:00')[0];
                 let parsed = new Date(cleanDateStr);
@@ -643,7 +643,10 @@
             const pekerjaan = tr.dataset.pekerjaan || tr.querySelector('td:nth-child(2)')?.innerText.trim() || '';
             const tempat = tr.dataset.tempat || tr.querySelector('td:nth-child(3)')?.innerText.trim() || '';
             const jenis = tr.dataset.jenis || '';
-            const nomorSurat = tr.querySelector('td:nth-child(4) span')?.innerText.trim() || '';
+            
+            // DIPERBAIKI: Mengambil secara spesifik teks dari kotak biru (nomor surat resmi di bawah)
+            const nomorSurat = tr.querySelector('td:nth-child(4) .flex span')?.innerText.trim() || '';
+            
             const pic = tr.dataset.pic || tr.querySelector('td:nth-child(5)')?.innerText.trim() || '';
             const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)')?.innerText.trim() || '';
 
