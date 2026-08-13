@@ -11,7 +11,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- LIBRARY MENGGUNAKAN jsDelivr (Aman dari Blokir Jaringan Instansi) -->
+    <!-- LIBRARY jsDelivr -->
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.2/build/docxtemplater.js"></script>
@@ -39,7 +39,7 @@
                 </div>
             </div>
             <div class="hidden md:flex space-x-2">
-                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer">
+                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer">
                     <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
                 </a>
                 <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
@@ -231,7 +231,6 @@
 
             <!-- Tab Content: Jenis Formulir -->
             <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                
                 <div id="boxFormJenis" class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 transition-all">
                     <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 mb-2">Tambah Jenis Formulir & Template</h3>
                     <div class="flex flex-col gap-3">
@@ -305,7 +304,7 @@
     <!-- Scripts -->
     <script>
         const PIN_ADMIN = "123456";
-        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbzSwXV36U6a2UhG6Zlq3sQPT1nVNwP9icdC3BhNB4SAE00bZLAs1SageZP4cOAoHw2V/exec";
+        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxVEwnprKvGUYFUOVOAjkHx6LOEMX8sIO9GVHOrAKWNrOp1Oio05xfr7u6bKXfg-10T/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
@@ -353,6 +352,7 @@
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
             let str = String(tglString).trim();
+            if (str.startsWith("'")) str = str.substring(1); // Hilangkan petik satu jika terbaca
             if (str.includes(" GMT") || str.includes(" 00:00:00")) {
                 let cleanDateStr = str.split(' 00:00:00')[0];
                 let parsed = new Date(cleanDateStr);
@@ -372,12 +372,12 @@
             if (viewName === 'ajuan') {
                 document.getElementById('viewDataAjuan').classList.remove('hidden');
                 document.getElementById('viewRekap').classList.add('hidden');
-                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
                 document.getElementById('menuRekap').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
             } else {
                 document.getElementById('viewDataAjuan').classList.add('hidden');
                 document.getElementById('viewRekap').classList.remove('hidden');
-                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
                 document.getElementById('menuDataAjuan').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
                 generateRekap();
             }
@@ -442,7 +442,6 @@
         function editSettingJenis(idx) {
             editingJenisIdx = idx;
             const item = listJenis[idx];
-            
             document.getElementById('setJenisNama').value = item.nama;
             document.getElementById('setJenisFormat').value = item.format;
             document.getElementById('setJenisUrl').value = item.templateUrl || "";
@@ -465,7 +464,6 @@
             const nama = document.getElementById('setJenisNama').value.trim();
             const format = document.getElementById('setJenisFormat').value.trim();
             const templateUrl = document.getElementById('setJenisUrl').value.trim();
-            
             if(!nama || !format) return alert("Nama dan format harus diisi!");
             
             listJenis[editingJenisIdx] = { nama, format, templateUrl };
@@ -583,7 +581,9 @@
                 }
                 generateRekap();
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud.</td></tr>`;
+                console.error("Gagal load data:", error);
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan Deployment URL benar.</td></tr>`;
+                globalDataList = [];
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
         }
@@ -597,7 +597,7 @@
 
             if (dateObj) {
                 namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
-                formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             } else if (data.tanggal) {
                 formatTgl = String(data.tanggal);
             }
