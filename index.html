@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FileSaver.js CDN untuk Download File -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -218,26 +220,34 @@
             </div>
 
             <div class="flex px-6 pt-3 border-b border-slate-200 bg-slate-50">
-                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">Jenis Formulir & Format</button>
+                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">Jenis Formulir & Template</button>
                 <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Daftar PIC BMN</button>
                 <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Koneksi Sistem (Cloud)</button>
             </div>
 
             <!-- Tab Content: Jenis Formulir -->
             <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                <div class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <h3 class="text-sm font-bold text-blue-800 mb-2">Tambah Jenis Formulir Baru</h3>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="setJenisNama" placeholder="Nama Formulir..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisFormat" placeholder="Format (Contoh: F30/PK/{romawi}/BMN/{thn})" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <button onclick="tambahSettingJenis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Tambah</button>
+                
+                <div id="boxFormJenis" class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 transition-all">
+                    <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 mb-2">Tambah Jenis Formulir & Template</h3>
+                    <div class="flex flex-col gap-3">
+                        <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisUrl" placeholder="Link / Keterangan Template..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
+                        
+                        <div class="flex justify-end gap-2">
+                            <button id="btnBatalEditJenis" onclick="batalEditJenis()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-times mr-1"></i> Batal</button>
+                            <button id="btnSubmitJenis" onclick="tambahSettingJenis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-plus mr-1"></i> Tambah Jenis</button>
+                        </div>
                     </div>
                 </div>
+
                 <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
                     <thead class="bg-slate-100 text-xs text-slate-600">
                         <tr>
-                            <th class="px-3 py-2 border-b w-[45%]">NAMA JENIS FORMULIR</th>
-                            <th class="px-3 py-2 border-b w-[40%]">FORMAT PENOMORAN</th>
+                            <th class="px-3 py-2 border-b w-[30%]">NAMA JENIS FORMULIR</th>
+                            <th class="px-3 py-2 border-b w-[30%]">FORMAT PENOMORAN</th>
+                            <th class="px-3 py-2 border-b w-[25%]">TEMPLATE DATA</th>
                             <th class="px-3 py-2 border-b w-[15%] text-center">AKSI</th>
                         </tr>
                     </thead>
@@ -295,32 +305,33 @@
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
+        
         const DEFAULT_JENIS = [
-            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}" },
-            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}" },
-            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}" },
-            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}" },
-            { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}" },
-            { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}" },
-            { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}" },
-            { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}" },
-            { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}" },
-            { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}" },
-            { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}" },
-            { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}" },
-            { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}" },
-            { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}" },
-            { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}" },
-            { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}" },
-            { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}" },
-            { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}" },
-            { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}" },
-            { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}" },
-            { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}" },
-            { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}" },
-            { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}" },
-            { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}" },
-            { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}" }
+            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" }
         ];
 
         let globalDataList = [];
@@ -328,39 +339,44 @@
         let curSheetUrl = localStorage.getItem('bmn_sheet_url') || DEFAULT_URL_SHEET;
         let listPics = JSON.parse(localStorage.getItem('bmn_pics')) || DEFAULT_PICS;
         let listJenis = JSON.parse(localStorage.getItem('bmn_jenis')) || DEFAULT_JENIS;
+        let editingJenisIdx = -1; 
 
         document.addEventListener('DOMContentLoaded', () => {
             renderDropdownsDinamis();
             loadDataDariCloud();
         });
 
-        // PARSER FINAL ANTI-GAGAL: Membersihkan format teks mentah ber-jam maupun YYYY-MM-DD
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
-
             let str = String(tglString).trim();
-
-            // Jika format teks Google ber-jam (contoh: "Wed Aug 05 2026 00:00:00 GMT...")
             if (str.includes(" GMT") || str.includes(" 00:00:00")) {
-                let cleanDateStr = str.split(' 00:00:00')[0]; // Ambil "Wed Aug 05 2026"
+                let cleanDateStr = str.split(' 00:00:00')[0];
                 let parsed = new Date(cleanDateStr);
                 if (!isNaN(parsed.getTime())) return parsed;
             }
-
-            // Jika format YYYY-MM-DD mentah (contoh: "2026-08-06")
             const partsIso = str.split('T')[0].split('-');
             if (partsIso.length === 3) {
                 const y = parseInt(partsIso[0]), m = parseInt(partsIso[1]) - 1, d = parseInt(partsIso[2]);
-                if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-                    return new Date(y, m, d);
-                }
+                if (!isNaN(y) && !isNaN(m) && !isNaN(d)) return new Date(y, m, d);
             }
-
-            // Fallback umum
             let parsed = new Date(str);
             if (!isNaN(parsed.getTime())) return parsed;
-
             return null;
+        }
+
+        function switchView(viewName) {
+            if (viewName === 'ajuan') {
+                document.getElementById('viewDataAjuan').classList.remove('hidden');
+                document.getElementById('viewRekap').classList.add('hidden');
+                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuRekap').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+            } else {
+                document.getElementById('viewDataAjuan').classList.add('hidden');
+                document.getElementById('viewRekap').classList.remove('hidden');
+                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuDataAjuan').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+                generateRekap();
+            }
         }
 
         function openModalSettings() {
@@ -369,7 +385,11 @@
             document.getElementById('setAppUrl').value = curAPIUrl;
             document.getElementById('setSheetUrl').value = curSheetUrl;
         }
-        function closeModalSettings() { document.getElementById('modalSettingsOverlay').classList.add('hidden'); }
+        
+        function closeModalSettings() { 
+            document.getElementById('modalSettingsOverlay').classList.add('hidden'); 
+            batalEditJenis(); 
+        }
 
         function openSettingTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -385,9 +405,10 @@
                 <tr class="border-b hover:bg-slate-50">
                     <td class="px-3 py-2 font-medium">${j.nama}</td>
                     <td class="px-3 py-2 font-mono text-xs text-blue-700">${j.format}</td>
+                    <td class="px-3 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[150px]" title="${j.templateUrl || '-'}">${j.templateUrl || '-'}</td>
                     <td class="px-3 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -407,25 +428,68 @@
         function tambahSettingJenis() {
             const nama = document.getElementById('setJenisNama').value.trim();
             const format = document.getElementById('setJenisFormat').value.trim();
+            const templateUrl = document.getElementById('setJenisUrl').value.trim();
             if(!nama || !format) return alert("Nama dan format harus diisi!");
-            listJenis.push({ nama, format });
+            listJenis.push({ nama, format, templateUrl });
             saveSettingsAndUpdate();
-            document.getElementById('setJenisNama').value = '';
-            document.getElementById('setJenisFormat').value = '';
+            batalEditJenis();
         }
 
         function editSettingJenis(idx) {
-            const namaBaru = prompt("Ubah Nama Jenis Formulir:", listJenis[idx].nama);
-            if (namaBaru === null || namaBaru.trim() === "") return;
-            const formatBaru = prompt("Ubah Format Penomoran:", listJenis[idx].format);
-            if (formatBaru === null || formatBaru.trim() === "") return;
-            listJenis[idx].nama = namaBaru.trim();
-            listJenis[idx].format = formatBaru.trim();
+            editingJenisIdx = idx;
+            const item = listJenis[idx];
+            
+            document.getElementById('setJenisNama').value = item.nama;
+            document.getElementById('setJenisFormat').value = item.format;
+            document.getElementById('setJenisUrl').value = item.templateUrl || "";
+            
+            const btnSubmit = document.getElementById('btnSubmitJenis');
+            btnSubmit.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan Edit';
+            btnSubmit.className = "bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors";
+            btnSubmit.onclick = simpanEditJenis;
+
+            document.getElementById('btnBatalEditJenis').classList.remove('hidden');
+            document.getElementById('boxFormJenis').className = "mb-4 bg-amber-50 border border-amber-300 rounded-xl p-4 transition-all";
+            document.getElementById('titleFormJenis').className = "text-sm font-bold text-amber-800 mb-2";
+            document.getElementById('titleFormJenis').innerText = "Edit Jenis Formulir & Template";
+
+            document.getElementById('setJenisNama').focus(); 
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+
+        function simpanEditJenis() {
+            const nama = document.getElementById('setJenisNama').value.trim();
+            const format = document.getElementById('setJenisFormat').value.trim();
+            const templateUrl = document.getElementById('setJenisUrl').value.trim();
+            
+            if(!nama || !format) return alert("Nama dan format harus diisi!");
+            
+            listJenis[editingJenisIdx] = { nama, format, templateUrl };
             saveSettingsAndUpdate();
+            batalEditJenis(); 
+            alert("✅ Jenis formulir berhasil diperbarui!");
+        }
+
+        function batalEditJenis() {
+            editingJenisIdx = -1;
+            document.getElementById('setJenisNama').value = '';
+            document.getElementById('setJenisFormat').value = '';
+            document.getElementById('setJenisUrl').value = '';
+            
+            const btnSubmit = document.getElementById('btnSubmitJenis');
+            btnSubmit.innerHTML = '<i class="fas fa-plus mr-1"></i> Tambah Jenis';
+            btnSubmit.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors";
+            btnSubmit.onclick = tambahSettingJenis;
+
+            document.getElementById('btnBatalEditJenis').classList.add('hidden');
+            document.getElementById('boxFormJenis').className = "mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 transition-all";
+            document.getElementById('titleFormJenis').className = "text-sm font-bold text-blue-800 mb-2";
+            document.getElementById('titleFormJenis').innerText = "Tambah Jenis Formulir & Template";
         }
 
         function hapusSettingJenis(idx) {
             if(!confirm("Hapus jenis ini?")) return;
+            if (editingJenisIdx === idx) batalEditJenis();
             listJenis.splice(idx, 1);
             saveSettingsAndUpdate();
         }
@@ -465,7 +529,7 @@
         }
 
         function resetPengaturanDefault() {
-            if(!confirm("Reset pengaturan?")) return;
+            if(!confirm("Reset pengaturan? (Tindakan ini akan mengembalikan semua link ke bawaan awal)")) return;
             const pin = prompt("🔒 Masukkan PIN Admin:");
             if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
             localStorage.clear();
@@ -559,7 +623,7 @@
                 <td class="px-3 py-2.5 text-center">
                     <div class="flex items-center justify-center space-x-1">
                         <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
-                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download"><i class="fas fa-download text-[10px]"></i></button>
+                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download Word (.doc)"><i class="fas fa-download text-[10px]"></i></button>
                         <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </td>
@@ -567,178 +631,226 @@
             tableBody.appendChild(tr);
         }
 
-        function downloadDraft(button) { window.open("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", '_blank'); }
+        // ================= FUNGSI DOWNLOAD WORD OFFLINE (AMAN DI XAMPP) =================
+        function downloadDraft(button) {
+            const tr = button.closest('tr');
+            const no = tr.querySelector('td:nth-child(1)').innerText;
+            const pekerjaan = tr.querySelector('td:nth-child(2)').innerText;
+            const tempat = tr.querySelector('td:nth-child(3)').innerText;
+            const jenis = tr.dataset.jenis;
+            const nomorSurat = tr.querySelector('td:nth-child(4) span').innerText;
+            const pic = tr.querySelector('td:nth-child(5)').innerText;
+            const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)').innerText;
 
-        function salinNomorTabel(button) {
-            const container = button.closest('div');
-            const teksNomor = container.querySelector('span').textContent.trim();
-            navigator.clipboard.writeText(teksNomor).then(() => {
-                button.className = "bg-emerald-600 text-white rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center";
-                button.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => {
-                    button.className = "bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center";
-                    button.innerHTML = '<i class="far fa-copy"></i>';
-                }, 1500);
-            });
+            try {
+                const content = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head><meta charset='utf-8'><title>Formulir BMN</title></head>
+                    <body style='font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5;'>
+                        <h2 style='text-align: center; color: #1e3264;'>FORMULIR BMN BBGTK JABAR</h2>
+                        <hr style='border: 1px solid #1e3264;'>
+                        <br>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr><td style='width: 200px; font-weight: bold;'>Jenis Formulir</td><td>: ${jenis}</td></tr>
+                            <tr><td style='font-weight: bold;'>Nomor Surat</td><td>: ${nomorSurat}</td></tr>
+                            <tr><td style='font-weight: bold;'>Pekerjaan / Keterangan</td><td>: ${pekerjaan}</td></tr>
+                            <tr><td style='font-weight: bold;'>Tempat / Tujuan</td><td>: ${tempat}</td></tr>
+                            <tr><td style='font-weight: bold;'>PIC BMN</td><td>: ${pic}</td></tr>
+                            <tr><td style='font-weight: bold;'>Tanggal</td><td>: ${tanggal}</td></tr>
+                            <tr><td style='font-weight: bold;'>Nomor Urut Ajuan</td><td>: ${no}</td></tr>
+                        </table>
+                    </body>
+                    </html>
+                `;
+
+                const blob = new Blob(['\ufeff' + content], {
+                    type: 'application/msword'
+                });
+
+                const safeFileName = `${nomorSurat.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
+                saveAs(blob, safeFileName);
+
+            } catch (error) {
+                alert("Gagal generate dokumen: " + error.message);
+            }
         }
 
-        function switchView(viewName) {
-            document.getElementById('viewDataAjuan').classList.toggle('hidden', viewName !== 'ajuan');
-            document.getElementById('viewRekap').classList.toggle('hidden', viewName !== 'rekap');
-            const baseClass = "px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer ";
-            document.getElementById('menuDataAjuan').className = baseClass + (viewName === 'ajuan' ? "bg-white/10 text-white border border-white/20" : "text-slate-300 hover:text-white hover:bg-white/5");
-            document.getElementById('menuRekap').className = baseClass + (viewName === 'rekap' ? "bg-white/10 text-white border border-white/20" : "text-slate-300 hover:text-white hover:bg-white/5");
-            if(viewName === 'rekap') generateRekap();
+        function salinNomorTabel(btn) {
+            const noSurat = btn.previousElementSibling.innerText;
+            navigator.clipboard.writeText(noSurat).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check text-green-600"></i>';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 1200);
+            });
         }
 
         function saringTabel() {
-            const q = document.getElementById("filterPekerjaan").value.toLowerCase();
-            const j = document.getElementById("filterJenis").value.toLowerCase();
-            const p = document.getElementById("filterPIC").value.toLowerCase();
-            document.querySelectorAll("#tableBody tr:not(#rowLoading)").forEach(tr => {
-                const text = tr.innerText.toLowerCase();
-                tr.style.display = text.includes(q) && (j === "" || text.includes(j)) && (p === "" || text.includes(p)) ? "" : "none";
+            const filterPekerjaan = document.getElementById('filterPekerjaan').value.toLowerCase();
+            const filterJenis = document.getElementById('filterJenis').value.toLowerCase();
+            const filterPIC = document.getElementById('filterPIC').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                if(row.id === 'rowLoading') return;
+                const pekerjaan = (row.dataset.pekerjaan || '').toLowerCase();
+                const jenis = (row.dataset.jenis || '').toLowerCase();
+                const pic = (row.dataset.pic || '').toLowerCase();
+                
+                const matchPekerjaan = pekerjaan.includes(filterPekerjaan);
+                const matchJenis = filterJenis === "" || jenis === filterJenis;
+                const matchPIC = filterPIC === "" || pic === filterPIC;
+
+                if (matchPekerjaan && matchJenis && matchPIC) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
             });
         }
 
-        function openModalSpreadsheet() { 
+        function generateRekap() {
+            document.getElementById('rekapTotalSurat').innerText = globalDataList.length;
+            
+            const jenisMap = {};
+            const picMap = {};
+            
+            globalDataList.forEach(item => {
+                const j = item.jenis || 'Lainnya';
+                jenisMap[j] = (jenisMap[j] || 0) + 1;
+                
+                const p = item.pic || 'Tidak Diketahui';
+                picMap[p] = (picMap[p] || 0) + 1;
+            });
+
+            document.getElementById('rekapTotalJenis').innerText = Object.keys(jenisMap).length;
+            document.getElementById('rekapTotalPIC').innerText = Object.keys(picMap).length;
+
+            const sortedJenis = Object.entries(jenisMap).sort((a,b) => b[1] - a[1]);
+            document.getElementById('listRekapJenis').innerHTML = sortedJenis.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedJenis.map(([nama, count]) => `
+                <div class="flex justify-between items-center px-3 py-2 border-b text-xs hover:bg-slate-50">
+                    <span class="font-medium text-slate-700 truncate pr-2">${nama}</span>
+                    <span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
+                </div>
+            `).join('');
+
+            const sortedPic = Object.entries(picMap).sort((a,b) => b[1] - a[1]);
+            document.getElementById('listRekapPIC').innerHTML = sortedPic.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedPic.map(([nama, count]) => `
+                <div class="flex justify-between items-center px-3 py-2 border-b text-xs hover:bg-slate-50">
+                    <span class="font-medium text-slate-700 truncate pr-2">${nama}</span>
+                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
+                </div>
+            `).join('');
+        }
+
+        function openModalSpreadsheet() {
             document.getElementById('iframeSpreadsheet').src = curSheetUrl;
-            document.getElementById('modalSpreadsheetOverlay').classList.remove('hidden'); 
+            document.getElementById('modalSpreadsheetOverlay').classList.remove('hidden');
         }
-        function closeModalSpreadsheet() { document.getElementById('modalSpreadsheetOverlay').classList.add('hidden'); }
-        function openModal() { document.getElementById('modalOverlay').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
-
-        function getBulanRomawi(tgl) {
-            const dateObj = parseTanggalLokal(tgl);
-            if (!dateObj) return "VIII";
-            const b = dateObj.getMonth() + 1;
-            return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][b] || "VIII";
+        function closeModalSpreadsheet() {
+            document.getElementById('modalSpreadsheetOverlay').classList.add('hidden');
+            document.getElementById('iframeSpreadsheet').src = '';
         }
-
-        function getNomorSuratReferensi(jenis, tgl) {
-            const dateObj = parseTanggalLokal(tgl);
-            const romawi = getBulanRomawi(tgl);
-            const thn = (dateObj && !isNaN(dateObj.getFullYear())) ? dateObj.getFullYear() : 2026;
-            const found = listJenis.find(item => item.nama === jenis);
-            let formatTemplate = found ? found.format : "BMN/{romawi}/{thn}";
-            return formatTemplate.replace(/{romawi}/g, romawi).replace(/{thn}/g, thn);
-        }
-
+        
         function openModalTambah() {
-            document.getElementById('modalTitle').textContent = "Tambah Ajuan Penomoran";
-            document.getElementById('inputRowIndex').value = '';
-            document.getElementById('inputPicBmn').value = '';
-            document.getElementById('inputJenisFormulir').value = '';
-            document.getElementById('inputPekerjaan').value = '';
-            document.getElementById('inputTanggal').value = '';
-            document.getElementById('inputTempat').value = '';
-            openModal();
+            document.getElementById('modalTitle').innerText = "Tambah Ajuan Penomoran";
+            document.getElementById('inputRowIndex').value = "";
+            document.getElementById('inputPicBmn').value = "";
+            document.getElementById('inputJenisFormulir').value = "";
+            document.getElementById('inputPekerjaan').value = "";
+            document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
+            document.getElementById('inputTempat').value = "";
+            document.getElementById('modalOverlay').classList.remove('hidden');
         }
 
         function openModalEdit(rowIndex) {
-            const item = globalDataList.find(i => i.rowIndex == rowIndex);
-            if (!item) return alert("Data tidak ditemukan!");
-            document.getElementById('modalTitle').textContent = "Edit Ajuan Penomoran";
-            document.getElementById('inputRowIndex').value = item.rowIndex;
-            document.getElementById('inputPicBmn').value = item.pic || '';
-            document.getElementById('inputJenisFormulir').value = item.jenis || '';
-            document.getElementById('inputPekerjaan').value = item.pekerjaan || '';
+            const data = globalDataList.find(d => Number(d.rowIndex) === Number(rowIndex));
+            if(!data) return alert("Data tidak ditemukan!");
             
-            let dateVal = '';
-            if (item.tanggal) {
-                let parsed = parseTanggalLokal(item.tanggal);
-                if (parsed && !isNaN(parsed.getTime())) {
-                    const y = parsed.getFullYear();
-                    const m = String(parsed.getMonth() + 1).padStart(2, '0');
-                    const d = String(parsed.getDate()).padStart(2, '0');
-                    dateVal = `${y}-${m}-${d}`;
+            document.getElementById('modalTitle').innerText = "Edit Ajuan Penomoran";
+            document.getElementById('inputRowIndex').value = data.rowIndex;
+            document.getElementById('inputPicBmn').value = data.pic || "";
+            document.getElementById('inputJenisFormulir').value = data.jenis || "";
+            document.getElementById('inputPekerjaan').value = data.pekerjaan || "";
+            
+            if(data.tanggal) {
+                let parsed = parseTanggalLokal(data.tanggal);
+                if(parsed) {
+                    document.getElementById('inputTanggal').value = parsed.toISOString().split('T')[0];
+                } else {
+                    document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
                 }
+            } else {
+                document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
             }
-            document.getElementById('inputTanggal').value = dateVal;
             
-            document.getElementById('inputTempat').value = item.tempat || '';
-            openModal();
+            document.getElementById('inputTempat').value = data.tempat || "";
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.add('hidden');
         }
 
         async function simpanDataCloud() {
             const rowIndex = document.getElementById('inputRowIndex').value;
             const pic = document.getElementById('inputPicBmn').value;
             const jenis = document.getElementById('inputJenisFormulir').value;
-            const pekerjaan = document.getElementById('inputPekerjaan').value;
+            const pekerjaan = document.getElementById('inputPekerjaan').value.trim();
             const tanggal = document.getElementById('inputTanggal').value;
-            const tempat = document.getElementById('inputTempat').value;
+            const tempat = document.getElementById('inputTempat').value.trim();
 
-            if (!pic || !jenis || !pekerjaan || !tanggal || !tempat) return alert("Harap lengkapi semua field!");
-
-            const ref = getNomorSuratReferensi(jenis, tanggal);
-            let payload = { pic, jenis, pekerjaan, tanggal, tempat };
-
-            if (!rowIndex) {
-                payload.action = "add";
-                payload.referensiDasar = ref;
-            } else {
-                payload.action = "update";
-                payload.rowIndex = rowIndex;
-                const existing = globalDataList.find(i => i.rowIndex == rowIndex);
-                payload.nomorSurat = `${existing ? existing.no : '001'}/${ref}`;
+            if(!pic || !jenis || !pekerjaan || !tanggal || !tempat) {
+                return alert("Semua field form wajib diisi!");
             }
 
-            const btn = document.getElementById('btnSimpan');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
-            btn.disabled = true;
+            const btnSimpan = document.getElementById('btnSimpan');
+            btnSimpan.disabled = true;
+            btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+
+            const payload = {
+                action: rowIndex === "" ? "tambah" : "edit",
+                rowIndex: rowIndex === "" ? undefined : Number(rowIndex),
+                pic, jenis, pekerjaan, tanggal, tempat
+            };
 
             try {
-                await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify(payload) });
-                closeModal();
-                loadDataDariCloud();
-            } catch (err) {
-                alert("Gagal menyimpan data.");
+                const response = await fetch(curAPIUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const res = await response.json();
+                if(res.status === "success" || res.result === "success") {
+                    alert("✅ Berhasil disimpan ke Cloud!");
+                    closeModal();
+                    loadDataDariCloud();
+                } else {
+                    alert("❌ Gagal: " + (res.message || "Unknown error"));
+                }
+            } catch (e) {
+                alert("❌ Terjadi kesalahan jaringan: " + e.message);
             } finally {
-                btn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-1.5"></i>Simpan ke Cloud';
-                btn.disabled = false;
+                btnSimpan.disabled = false;
+                btnSimpan.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i>Simpan ke Cloud';
             }
         }
 
         async function hapusDataCloud(rowIndex) {
-            if (!confirm("Yakin ingin menghapus data ini?")) return;
+            if(!confirm("Hapus data ajuan ini dari database cloud?")) return;
             try {
-                await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify({ action: "delete", rowIndex: rowIndex }) });
-                loadDataDariCloud();
-            } catch (err) {
-                alert("Gagal menghapus data.");
+                const response = await fetch(curAPIUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'hapus', rowIndex: Number(rowIndex) })
+                });
+                const res = await response.json();
+                if(res.status === "success" || res.result === "success") {
+                    alert("✅ Data berhasil dihapus!");
+                    loadDataDariCloud();
+                } else {
+                    alert("❌ Gagal menghapus: " + (res.message || "Unknown error"));
+                }
+            } catch (e) {
+                alert("❌ Terjadi kesalahan jaringan: " + e.message);
             }
-        }
-
-        function generateRekap() {
-            const rows = document.querySelectorAll('#tableBody tr:not(#rowLoading)');
-            let total = rows.length;
-            let cJenis = {}, cPic = {};
-            rows.forEach(r => {
-                let j = r.dataset.jenis, p = r.dataset.pic;
-                if(j) cJenis[j] = (cJenis[j]||0)+1;
-                if(p) cPic[p] = (cPic[p]||0)+1;
-            });
-            document.getElementById('rekapTotalSurat').textContent = total;
-            document.getElementById('rekapTotalJenis').textContent = Object.keys(cJenis).length;
-            document.getElementById('rekapTotalPIC').textContent = Object.keys(cPic).length;
-
-            const rJenis = Object.entries(cJenis).sort((a,b)=>b[1]-a[1]);
-            const rPic = Object.entries(cPic).sort((a,b)=>b[1]-a[1]);
-
-            const cJ = document.getElementById('listRekapJenis');
-            cJ.innerHTML = rJenis.length === 0 ? '<div class="p-4 text-center text-slate-400 text-xs">Belum ada data</div>' : '';
-            rJenis.forEach(([k,v]) => {
-                let pct = total > 0 ? Math.round((v/total)*100) : 0;
-                cJ.innerHTML += `<div class="flex items-center justify-between p-3 border-b text-xs"><div class="flex-1 pr-3"><span class="font-medium text-slate-700">${k}</span><div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width:${pct}%"></div></div></div><span class="font-bold text-[#1e3264] text-sm">${v}</span></div>`;
-            });
-
-            const cP = document.getElementById('listRekapPIC');
-            cP.innerHTML = rPic.length === 0 ? '<div class="p-4 text-center text-slate-400 text-xs">Belum ada data</div>' : '';
-            rPic.forEach(([k,v]) => {
-                let pct = total > 0 ? Math.round((v/total)*100) : 0;
-                cP.innerHTML += `<div class="flex items-center justify-between p-3 border-b text-xs"><div class="flex-1 pr-3"><span class="font-medium text-slate-700">${k}</span><div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-purple-500 h-1.5 rounded-full" style="width:${pct}%"></div></div></div><span class="font-bold text-[#1e3264] text-sm">${v}</span></div>`;
-            });
         }
     </script>
 </body>
