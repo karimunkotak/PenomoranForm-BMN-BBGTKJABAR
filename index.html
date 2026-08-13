@@ -11,7 +11,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- LIBRARY MENGGUNAKAN jsDelivr (Aman dari Blokir Jaringan Instansi) -->
+    <!-- LIBRARY MENGGUNAKAN jsDelivr -->
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.2/build/docxtemplater.js"></script>
@@ -39,7 +39,7 @@
                 </div>
             </div>
             <div class="hidden md:flex space-x-2">
-                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer">
+                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer">
                     <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
                 </a>
                 <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
@@ -305,7 +305,7 @@
     <!-- Scripts -->
     <script>
         const PIN_ADMIN = "123456";
-        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbzSwXV36U6a2UhG6Zlq3sQPT1nVNwP9icdC3BhNB4SAE00bZLAs1SageZP4cOAoHw2V/exec";
+        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxVEwnprKvGUYFUOVOAjkHx6LOEMX8sIO9GVHOrAKWNrOp1Oio05xfr7u6bKXfg-10T/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
@@ -372,12 +372,12 @@
             if (viewName === 'ajuan') {
                 document.getElementById('viewDataAjuan').classList.remove('hidden');
                 document.getElementById('viewRekap').classList.add('hidden');
-                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
                 document.getElementById('menuRekap').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
             } else {
                 document.getElementById('viewDataAjuan').classList.add('hidden');
                 document.getElementById('viewRekap').classList.remove('hidden');
-                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/20 transition-all cursor-pointer";
+                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
                 document.getElementById('menuDataAjuan').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
                 generateRekap();
             }
@@ -597,7 +597,8 @@
 
             if (dateObj) {
                 namaHari = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
-                formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                // Diubah dari 'short' menjadi 'long' agar nama bulan tidak disingkat (misal: Agustus)
+                formatTgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             } else if (data.tanggal) {
                 formatTgl = String(data.tanggal);
             }
@@ -837,7 +838,7 @@
         async function simpanDataCloud() {
             const rowIndex = document.getElementById('inputRowIndex').value;
             const pic = document.getElementById('inputPicBmn').value;
-            const jenis = document.getElementById('inputJenisFormulir').value;
+            const jenis = document.getElementById('inputJenisFormulir'].value;
             const pekerjaan = document.getElementById('inputPekerjaan').value.trim();
             const tanggal = document.getElementById('inputTanggal').value;
             const tempat = document.getElementById('inputTempat').value.trim();
