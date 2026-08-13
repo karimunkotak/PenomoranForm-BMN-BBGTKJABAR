@@ -12,6 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FileSaver.js CDN untuk Download File -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- LIBRARY LOKAL CADANGAN (Mencegah error PizZip is not defined di XAMPP) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.2/docxtemplater.js"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -233,7 +238,7 @@
                     <div class="flex flex-col gap-3">
                         <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisUrl" placeholder="Link / Keterangan Template..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisUrl" placeholder="URL template Word, contoh: https://.../templates/F02.docx..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
                         
                         <div class="flex justify-end gap-2">
                             <button id="btnBatalEditJenis" onclick="batalEditJenis()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-times mr-1"></i> Batal</button>
@@ -308,7 +313,7 @@
         
         const DEFAULT_JENIS = [
             { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
             { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "" },
             { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "" },
             { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "" },
@@ -603,6 +608,7 @@
             tr.dataset.jenis = data.jenis || '';
             tr.dataset.pic = data.pic || '';
             tr.dataset.pekerjaan = data.pekerjaan || '';
+            tr.dataset.tempat = data.tempat || '';
 
             tr.innerHTML = `
                 <td class="px-3 py-2.5 text-center font-semibold text-slate-500">${data.no || '-'}</td>
@@ -623,7 +629,7 @@
                 <td class="px-3 py-2.5 text-center">
                     <div class="flex items-center justify-center space-x-1">
                         <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
-                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download Word (.doc)"><i class="fas fa-download text-[10px]"></i></button>
+                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download Word (.docx)"><i class="fas fa-download text-[10px]"></i></button>
                         <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </td>
@@ -631,47 +637,86 @@
             tableBody.appendChild(tr);
         }
 
-        // ================= FUNGSI DOWNLOAD WORD OFFLINE (AMAN DI XAMPP) =================
-        function downloadDraft(button) {
+        // ================= FUNGSI DOWNLOAD TEMPLATE WORD (.DOCX) =================
+        async function downloadDraft(button) {
             const tr = button.closest('tr');
-            const no = tr.querySelector('td:nth-child(1)').innerText;
-            const pekerjaan = tr.querySelector('td:nth-child(2)').innerText;
-            const tempat = tr.querySelector('td:nth-child(3)').innerText;
-            const jenis = tr.dataset.jenis;
-            const nomorSurat = tr.querySelector('td:nth-child(4) span').innerText;
-            const pic = tr.querySelector('td:nth-child(5)').innerText;
-            const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)').innerText;
+            const no = tr.querySelector('td:nth-child(1)')?.innerText.trim() || '';
+            const pekerjaan = tr.dataset.pekerjaan || tr.querySelector('td:nth-child(2)')?.innerText.trim() || '';
+            const tempat = tr.dataset.tempat || tr.querySelector('td:nth-child(3)')?.innerText.trim() || '';
+            const jenis = tr.dataset.jenis || '';
+            const nomorSurat = tr.querySelector('td:nth-child(4) span')?.innerText.trim() || '';
+            const pic = tr.dataset.pic || tr.querySelector('td:nth-child(5)')?.innerText.trim() || '';
+            const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)')?.innerText.trim() || '';
+
+            const template = listJenis.find(item => item.nama === jenis);
+
+            if (!template) {
+                alert("❌ Jenis formulir tidak ditemukan di pengaturan template.");
+                return;
+            }
+
+            if (jenis === "F2 Pengadaan Rutin") {
+                template.templateUrl = "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx";
+            }
+
+            if (!template.templateUrl) {
+                alert(`⚠️ Template untuk "${jenis}" belum diatur link filenya.`);
+                return;
+            }
+
+            const originalHTML = button.innerHTML;
+            button.disabled = true;
+            button.title = "Membuat formulir...";
+            button.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i>';
 
             try {
-                const content = `
-                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                    <head><meta charset='utf-8'><title>Formulir BMN</title></head>
-                    <body style='font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5;'>
-                        <h2 style='text-align: center; color: #1e3264;'>FORMULIR BMN BBGTK JABAR</h2>
-                        <hr style='border: 1px solid #1e3264;'>
-                        <br>
-                        <table style='width: 100%; border-collapse: collapse;'>
-                            <tr><td style='width: 200px; font-weight: bold;'>Jenis Formulir</td><td>: ${jenis}</td></tr>
-                            <tr><td style='font-weight: bold;'>Nomor Surat</td><td>: ${nomorSurat}</td></tr>
-                            <tr><td style='font-weight: bold;'>Pekerjaan / Keterangan</td><td>: ${pekerjaan}</td></tr>
-                            <tr><td style='font-weight: bold;'>Tempat / Tujuan</td><td>: ${tempat}</td></tr>
-                            <tr><td style='font-weight: bold;'>PIC BMN</td><td>: ${pic}</td></tr>
-                            <tr><td style='font-weight: bold;'>Tanggal</td><td>: ${tanggal}</td></tr>
-                            <tr><td style='font-weight: bold;'>Nomor Urut Ajuan</td><td>: ${no}</td></tr>
-                        </table>
-                    </body>
-                    </html>
-                `;
+                // Gunakan window.PizZip jika tersedia, cek pengaman tambahan
+                if (typeof PizZip === 'undefined' && typeof window.PizZip === 'undefined') {
+                    throw new Error("Library PizZip gagal dimuat oleh browser.");
+                }
+                const ZipLib = window.PizZip || PizZip;
+                const DocLib = window.docxtemplater || docxtemplater;
 
-                const blob = new Blob(['\ufeff' + content], {
-                    type: 'application/msword'
+                const fetchUrl = template.templateUrl + (template.templateUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+                const response = await fetch(fetchUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Template gagal diambil dari server (${response.status})`);
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const zip = new ZipLib(arrayBuffer);
+                const doc = new DocLib(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                    delimiters: { start: '{{', end: '}}' }
                 });
 
-                const safeFileName = `${nomorSurat.replace(/[/\\?%*:|"<>]/g, '-')}.doc`;
-                saveAs(blob, safeFileName);
+                doc.render({
+                    nomorSurat: nomorSurat,
+                    pekerjaan: pekerjaan,
+                    tempat: tempat,
+                    tanggal: tanggal,
+                    pic: pic,
+                    no: no,
+                    jenis: jenis
+                });
+
+                const output = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+
+                const safeFileName = (nomorSurat || jenis || 'Formulir BMN').replace(/[\/\\?%*:|"<>]/g, '-').trim();
+                saveAs(output, `${safeFileName}.docx`);
 
             } catch (error) {
-                alert("Gagal generate dokumen: " + error.message);
+                console.error("Gagal generate docx:", error);
+                alert("❌ Gagal membuat dokumen Word: " + error.message);
+            } finally {
+                button.disabled = false;
+                button.title = "Download Word (.docx)";
+                button.innerHTML = originalHTML;
             }
         }
 
