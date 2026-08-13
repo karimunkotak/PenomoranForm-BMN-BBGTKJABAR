@@ -10,12 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FileSaver.js CDN untuk Download File -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
-    <!-- LIBRARY LOKAL CADANGAN (Mencegah error PizZip is not defined di XAMPP) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.2/docxtemplater.js"></script>
+    <!-- LIBRARY MENGGUNAKAN jsDelivr (Aman dari Blokir Jaringan Instansi) -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.2/build/docxtemplater.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
@@ -670,9 +669,8 @@
             button.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i>';
 
             try {
-                // Gunakan window.PizZip jika tersedia, cek pengaman tambahan
                 if (typeof PizZip === 'undefined' && typeof window.PizZip === 'undefined') {
-                    throw new Error("Library PizZip gagal dimuat oleh browser.");
+                    throw new Error("Library PizZip gagal dimuat oleh browser akibat pembatasan jaringan/firewall.");
                 }
                 const ZipLib = window.PizZip || PizZip;
                 const DocLib = window.docxtemplater || docxtemplater;
