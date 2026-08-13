@@ -310,10 +310,10 @@
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         
         const DEFAULT_JENIS = [
-            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
             { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
-            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "" },
+            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F03.docx" },
+            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F04.docx" },
             { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "" },
             { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "" },
             { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "" },
@@ -338,10 +338,14 @@
         ];
 
         let globalDataList = [];
-        let curAPIUrl = localStorage.getItem('bmn_api_url') || DEFAULT_URL_API;
-        let curSheetUrl = localStorage.getItem('bmn_sheet_url') || DEFAULT_URL_SHEET;
-        let listPics = JSON.parse(localStorage.getItem('bmn_pics')) || DEFAULT_PICS;
-        let listJenis = JSON.parse(localStorage.getItem('bmn_jenis')) || DEFAULT_JENIS;
+
+        // 100% OTOMATIS: Selalu paksa menggunakan URL bawaan terbaru dari GitHub
+        let curAPIUrl = DEFAULT_URL_API;
+        let curSheetUrl = DEFAULT_URL_SHEET;
+
+        // Untuk list PIC & Jenis, jika user belum pernah ubah, pakai default. Jika ada update dari kode, otomatis sinkron.
+        let listPics = JSON.parse(localStorage.getItem('bmn_pics_v2')) || DEFAULT_PICS;
+        let listJenis = JSON.parse(localStorage.getItem('bmn_jenis_v2')) || DEFAULT_JENIS;
         let editingJenisIdx = -1; 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -521,33 +525,25 @@
         function simpanPengaturanSistem() {
             const pin = prompt("🔒 Masukkan PIN Admin:");
             if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
-            const api = document.getElementById('setAppUrl').value.trim();
-            const sheet = document.getElementById('setSheetUrl').value.trim();
-            if(api) { curAPIUrl = api; localStorage.setItem('bmn_api_url', api); }
-            if(sheet) { curSheetUrl = sheet; localStorage.setItem('bmn_sheet_url', sheet); }
-            alert("✅ Berhasil disimpan!");
+            alert("✅ URL Sistem sudah diatur otomatis terpusat dari server.");
             closeModalSettings();
-            loadDataDariCloud();
         }
 
         function resetPengaturanDefault() {
-            if(!confirm("Reset pengaturan? (Tindakan ini akan mengembalikan semua link ke bawaan awal)")) return;
-            const pin = prompt("🔒 Masukkan PIN Admin:");
-            if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
-            localStorage.clear();
+            if(!confirm("Reset pengaturan lokal browser?")) return;
+            localStorage.removeItem('bmn_pics_v2');
+            localStorage.removeItem('bmn_jenis_v2');
             listPics = [...DEFAULT_PICS];
             listJenis = [...DEFAULT_JENIS];
-            curAPIUrl = DEFAULT_URL_API;
-            curSheetUrl = DEFAULT_URL_SHEET;
             saveSettingsAndUpdate();
-            alert("✅ Berhasil direset.");
+            alert("✅ Berhasil direset ke pengaturan pusat.");
             closeModalSettings();
             loadDataDariCloud();
         }
 
         function saveSettingsAndUpdate() {
-            localStorage.setItem('bmn_pics', JSON.stringify(listPics));
-            localStorage.setItem('bmn_jenis', JSON.stringify(listJenis));
+            localStorage.setItem('bmn_pics_v2', JSON.stringify(listPics));
+            localStorage.setItem('bmn_jenis_v2', JSON.stringify(listJenis));
             renderSettingTables();
             renderDropdownsDinamis();
         }
@@ -643,10 +639,7 @@
             const pekerjaan = tr.dataset.pekerjaan || tr.querySelector('td:nth-child(2)')?.innerText.trim() || '';
             const tempat = tr.dataset.tempat || tr.querySelector('td:nth-child(3)')?.innerText.trim() || '';
             const jenis = tr.dataset.jenis || '';
-            
-            // DIPERBAIKI: Mengambil secara spesifik teks dari kotak biru (nomor surat resmi di bawah)
             const nomorSurat = tr.querySelector('td:nth-child(4) .flex span')?.innerText.trim() || '';
-            
             const pic = tr.dataset.pic || tr.querySelector('td:nth-child(5)')?.innerText.trim() || '';
             const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)')?.innerText.trim() || '';
 
@@ -655,10 +648,6 @@
             if (!template) {
                 alert("❌ Jenis formulir tidak ditemukan di pengaturan template.");
                 return;
-            }
-
-            if (jenis === "F2 Pengadaan Rutin") {
-                template.templateUrl = "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx";
             }
 
             if (!template.templateUrl) {
@@ -887,7 +876,7 @@
                     method: 'POST',
                     body: JSON.stringify({ action: 'hapus', rowIndex: Number(rowIndex) })
                 });
-                const res = await response.json();
+                const res = awaitResponse.json();
                 if(res.status === "success" || res.result === "success") {
                     alert("✅ Data berhasil dihapus!");
                     loadDataDariCloud();
