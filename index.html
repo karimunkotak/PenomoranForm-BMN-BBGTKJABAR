@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penomoran Formulir BMN BBGTK Jabar</title>
+    <title>Sistem Informasi Formulir BMN BBGTK Jabar</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -15,9 +20,11 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.2/build/docxtemplater.js"></script>
+    <!-- SheetJS untuk Ekspor Excel Profesional -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -25,138 +32,235 @@
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Toast Notification Animation */
+        #toastContainer {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast-item {
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            min-width: 280px;
+            max-width: 380px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Style untuk Mode HP (Mobile Frame Emulator) */
+        body.mobile-emulator-mode {
+            background-color: #0f172a !important;
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        body.mobile-emulator-mode #appWrapper {
+            max-width: 420px !important;
+            margin: 0 auto;
+            border-radius: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 10px #1e293b;
+            overflow: hidden;
+            position: relative;
+        }
+        body.mobile-emulator-mode #appWrapper::before {
+            content: '';
+            display: block;
+            width: 120px;
+            height: 22px;
+            background-color: #1e293b;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 100;
+        }
+        body.mobile-emulator-mode nav {
+            margin-top: 10px;
+        }
     </style>
 </head>
-<body class="text-slate-800 pb-10">
+<body class="bg-[#f4f7fb] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-10">
 
-    <!-- Navigation Bar Compact -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <nav class="bg-[#1e3264] text-white rounded-xl flex items-center justify-between px-5 py-3 shadow-md">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-file-alt text-blue-400 text-2xl"></i>
-                <div class="text-base font-bold uppercase tracking-wide leading-tight">
-                    PENOMORAN FORMULIR BMN BBGTK JABAR
+    <!-- Container Toast Notification Mengambang -->
+    <div id="toastContainer"></div>
+
+    <!-- Wrapper Utama Aplikasi untuk Mendukung Mode HP / Web -->
+    <div id="appWrapper" class="w-full bg-[#f4f7fb] dark:bg-slate-900 transition-all duration-300">
+
+        <!-- Navigation Bar Compact -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            <nav class="bg-[#1e3264] dark:bg-slate-800 text-white rounded-xl flex items-center justify-between px-5 py-3 shadow-md border border-slate-700/30">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-file-alt text-blue-400 text-2xl"></i>
+                    <div class="text-base font-bold uppercase tracking-wide leading-tight flex items-center">
+                        <span>SISTEM INFORMASI FORMULIR BMN BBGTK JABAR</span>
+                        <!-- Indikator Koneksi Real-Time -->
+                        <span id="networkBadge" class="ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" title="Koneksi Cloud Stabil">
+                            <span class="w-1.5 h-1.5 mr-1 bg-emerald-400 rounded-full animate-pulse"></span> Online
+                        </span>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer">
+                        <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
+                    </a>
+                    <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
+                        <i class="fas fa-database mr-1.5"></i> Rekap No Surat
+                    </a>
+                    <a href="#" onclick="openModalSpreadsheet()" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
+                        <i class="fas fa-file-excel mr-1.5 text-blue-300"></i> Data Base
+                    </a>
+                    <div class="w-px bg-white/20 mx-1 h-5"></div>
+                    
+                    <!-- Tombol Toggle Dark/Light Mode -->
+                    <button onclick="toggleDarkMode()" id="btnToggleDark" class="text-amber-300 hover:text-white hover:bg-white/10 p-2 rounded-lg text-xs transition-all cursor-pointer" title="Ganti Tema Terang/Gelap">
+                        <i class="fas fa-moon" id="iconDark"></i>
+                    </button>
+
+                    <!-- Tombol Toggle Mode Web / HP -->
+                    <button onclick="toggleAppMode()" id="btnToggleMode" class="text-cyan-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer" title="Ubah ke Mode HP">
+                        <i class="fas fa-desktop mr-1.5" id="iconMode"></i> <span id="labelModeText">Mode Web</span>
+                    </button>
+                    <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
+                        <i class="fas fa-cog mr-1.5"></i> Pengaturan
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Mobile Menu Quick Bar khusus bawah nav jika di mode sempit -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 md:hidden flex justify-between items-center bg-slate-200 dark:bg-slate-800 p-2 rounded-lg text-xs font-semibold">
+            <div class="flex space-x-1">
+                <button onclick="switchView('ajuan')" class="px-2.5 py-1 bg-[#1e3264] text-white rounded"><i class="fas fa-table mr-1"></i> Ajuan</button>
+                <button onclick="switchView('rekap')" class="px-2.5 py-1 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded"><i class="fas fa-database mr-1"></i> Rekap</button>
+                <button onclick="openModalSpreadsheet()" class="px-2.5 py-1 bg-emerald-700 text-white rounded"><i class="fas fa-file-excel mr-1"></i> Sheet</button>
+            </div>
+            <div class="flex space-x-1">
+                <button onclick="toggleDarkMode()" class="px-2.5 py-1 bg-amber-600 text-white rounded" title="Ganti Tema"><i class="fas fa-moon"></i></button>
+                <button onclick="toggleAppMode()" class="px-2.5 py-1 bg-cyan-700 text-white rounded" title="Ganti Mode"><i class="fas fa-mobile-alt"></i></button>
+                <button onclick="openModalSettings()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-cog"></i></button>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 1: DATA AJUAN ================= -->
+        <main id="viewDataAjuan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 transition-all duration-300">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Dashboard Data Penomoran</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Tekan tombol <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono">/</kbd> di keyboard untuk pencarian cepat.</p>
+                </div>
+                <div class="flex items-center space-x-2.5 mt-2 sm:mt-0">
+                    <button onclick="loadDataDariCloud()" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs transition-colors">
+                        <i id="iconRefresh" class="fas fa-sync-alt mr-1.5 text-slate-400 transition-transform duration-500"></i> Refresh
+                    </button>
+                    <button onclick="openModalTambah()" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-3.5 py-2 rounded-lg flex items-center text-xs font-semibold shadow-xs transition-colors">
+                        <i class="fas fa-plus mr-1.5"></i> Tambah Ajuan
+                    </button>
                 </div>
             </div>
-            <div class="hidden md:flex space-x-2">
-                <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer">
-                    <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
-                </a>
-                <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                    <i class="fas fa-database mr-1.5"></i> Rekap No Surat
-                </a>
-                <a href="#" onclick="openModalSpreadsheet()" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                    <i class="fas fa-file-excel mr-1.5 text-blue-300"></i> Spreadsheet
-                </a>
-                <div class="w-px bg-white/20 mx-1"></div>
-                <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                    <i class="fas fa-cog mr-1.5"></i> Pengaturan
-                </a>
-            </div>
-        </nav>
-    </div>
 
-    <!-- ================= VIEW 1: DATA AJUAN ================= -->
-    <main id="viewDataAjuan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 transition-all duration-300">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-            <h1 class="text-xl font-bold text-[#1e3264]">Dashboard Data Penomoran</h1>
-            <div class="flex items-center space-x-2.5 mt-2 sm:mt-0">
-                <button onclick="loadDataDariCloud()" class="bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs transition-colors">
-                    <i id="iconRefresh" class="fas fa-sync-alt mr-1.5 text-slate-400 transition-transform duration-500"></i> Refresh
-                </button>
-                <button onclick="openModalTambah()" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-3.5 py-2 rounded-lg flex items-center text-xs font-semibold shadow-xs transition-colors">
-                    <i class="fas fa-plus mr-1.5"></i> Tambah Ajuan
-                </button>
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse table-auto">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                                <th class="px-3 py-3 align-middle w-10 text-center">NO</th>
+                                <th class="px-4 py-3 align-top w-[25%]">
+                                    <div class="flex flex-col space-y-1">
+                                        <span>NAMA PEKERJAAN / KETERANGAN</span>
+                                        <input type="text" id="filterPekerjaan" onkeyup="saringTabel()" placeholder="Cari pekerjaan (tekan /)..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1 text-xs font-normal text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                </th>
+                                <th class="px-4 py-3 align-top w-[14%]">TEMPAT / TUJUAN</th>
+                                <th class="px-4 py-3 text-center align-top w-[22%]">
+                                    <div class="flex flex-col space-y-1 items-center">
+                                        <span>JENIS FORMULIR & NOMOR SURAT</span>
+                                        <select id="filterJenis" onchange="saringTabel()" class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1 text-xs font-normal text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 bg-white w-full max-w-[240px] truncate"></select>
+                                    </div>
+                                </th>
+                                <th class="px-4 py-3 text-center align-top w-[13%]">
+                                    <div class="flex flex-col space-y-1 items-center">
+                                        <span>PIC BMN</span>
+                                        <select id="filterPIC" onchange="saringTabel()" class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1 text-xs font-normal text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 bg-white w-full"></select>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 text-center align-middle w-[10%]">TANGGAL</th>
+                                <th class="px-3 py-3 text-center align-middle w-20">AKSI</th>
+                            </tr>
+                        </thead>    
+                        <tbody id="tableBody" class="text-xs text-slate-700 dark:text-slate-200">
+                            <tr id="rowLoading">
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                    <i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i>
+                                    <p>Menarik data dari Google Spreadsheet...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </main>
 
-        <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse table-auto">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 tracking-wider">
-                            <th class="px-3 py-3 align-middle w-10 text-center">NO</th>
-                            <th class="px-4 py-3 align-top w-[25%]">
-                                <div class="flex flex-col space-y-1">
-                                    <span>NAMA PEKERJAAN / KETERANGAN</span>
-                                    <input type="text" id="filterPekerjaan" onkeyup="saringTabel()" placeholder="Cari pekerjaan..." class="w-full border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500">
-                                </div>
-                            </th>
-                            <th class="px-4 py-3 align-top w-[14%]">TEMPAT / TUJUAN</th>
-                            <th class="px-4 py-3 text-center align-top w-[22%]">
-                                <div class="flex flex-col space-y-1 items-center">
-                                    <span>JENIS FORMULIR & NOMOR SURAT</span>
-                                    <select id="filterJenis" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full max-w-[240px] truncate"></select>
-                                </div>
-                            </th>
-                            <th class="px-4 py-3 text-center align-top w-[13%]">
-                                <div class="flex flex-col space-y-1 items-center">
-                                    <span>PIC BMN</span>
-                                    <select id="filterPIC" onchange="saringTabel()" class="border border-slate-300 rounded px-2 py-1 text-xs font-normal text-slate-700 focus:outline-none focus:border-blue-500 bg-white w-full"></select>
-                                </div>
-                            </th>
-                            <th class="px-3 py-3 text-center align-middle w-[10%]">TANGGAL</th>
-                            <th class="px-3 py-3 text-center align-middle w-20">AKSI</th>
-                        </tr>
-                    </thead>    
-                    <tbody id="tableBody" class="text-xs text-slate-700">
-                        <tr id="rowLoading">
-                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
-                                <i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i>
-                                <p>Menarik data dari Google Spreadsheet...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- ================= VIEW 2: REKAP NO SURAT ================= -->
+        <main id="viewRekap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 hidden pb-10">
+            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Rekapitulasi Data Penomoran</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Statistik dan Pivot Data Formulir Keseluruhan</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportDataExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-semibold shadow-xs transition-colors">
+                        <i class="fas fa-file-excel mr-1.5"></i> Unduh Laporan Excel
+                    </button>
+                    <button onclick="generateRekap()" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs">
+                        <i class="fas fa-sync-alt mr-1.5 text-slate-400"></i> Muat Ulang
+                    </button>
+                </div>
             </div>
-        </div>
-    </main>
 
-    <!-- ================= VIEW 2: REKAP NO SURAT ================= -->
-    <main id="viewRekap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 hidden pb-10">
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h1 class="text-xl font-bold text-[#1e3264]">Rekapitulasi Data Penomoran</h1>
-                <p class="text-slate-500 text-xs mt-0.5">Statistik dan Pivot Data Formulir Keseluruhan</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center space-x-3">
+                    <div class="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-file-invoice"></i></div>
+                    <div><p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Surat Keluar</p><h3 id="rekapTotalSurat" class="text-2xl font-bold text-[#1e3264] dark:text-white">0</h3></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center space-x-3">
+                    <div class="bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-tags"></i></div>
+                    <div><p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Jenis Dipakai</p><h3 id="rekapTotalJenis" class="text-2xl font-bold text-[#1e3264] dark:text-white">0</h3></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center space-x-3">
+                    <div class="bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-user-tie"></i></div>
+                    <div><p class="text-xs font-semibold text-slate-500 dark:text-slate-400">PIC BMN Terlibat</p><h3 id="rekapTotalPIC" class="text-2xl font-bold text-[#1e3264] dark:text-white">0</h3></div>
+                </div>
             </div>
-            <button onclick="generateRekap()" class="bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs">
-                <i class="fas fa-sync-alt mr-1.5 text-slate-400"></i> Muat Ulang
-            </button>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
-                <div class="bg-blue-100 text-blue-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-file-invoice"></i></div>
-                <div><p class="text-xs font-semibold text-slate-500">Total Surat Keluar</p><h3 id="rekapTotalSurat" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[400px]">
+                    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 rounded-t-xl font-bold text-xs text-[#1e3264] dark:text-blue-400">Peringkat Formulir Terbanyak</div>
+                    <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapJenis"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[400px]">
+                    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 rounded-t-xl font-bold text-xs text-[#1e3264] dark:text-blue-400">Jumlah Formulir per PIC BMN</div>
+                    <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapPIC"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
-                <div class="bg-green-100 text-green-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-tags"></i></div>
-                <div><p class="text-xs font-semibold text-slate-500">Jenis Dipakai</p><h3 id="rekapTotalJenis" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
-            </div>
-            <div class="bg-white rounded-xl p-4 shadow-xs border border-slate-200 flex items-center space-x-3">
-                <div class="bg-purple-100 text-purple-600 h-10 w-10 rounded-lg flex items-center justify-center text-lg"><i class="fas fa-user-tie"></i></div>
-                <div><p class="text-xs font-semibold text-slate-500">PIC BMN Terlibat</p><h3 id="rekapTotalPIC" class="text-2xl font-bold text-[#1e3264]">0</h3></div>
-            </div>
-        </div>
+        </main>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col h-[400px]">
-                <div class="px-4 py-3 border-b bg-slate-50 rounded-t-xl font-bold text-xs text-[#1e3264]">Peringkat Formulir Terbanyak</div>
-                <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapJenis"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col h-[400px]">
-                <div class="px-4 py-3 border-b bg-slate-50 rounded-t-xl font-bold text-xs text-[#1e3264]">Jumlah Formulir per PIC BMN</div>
-                <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapPIC"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
-            </div>
-        </div>
-    </main>
+    </div> <!-- End of appWrapper -->
 
     <!-- ================= MODAL TAMBAH/EDIT AJUAN ================= -->
     <div id="modalOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center px-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-7 space-y-5 transform transition-all" id="modalContent">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-200">
-                <h2 id="modalTitle" class="text-xl font-bold text-[#1e3264]">Tambah Ajuan Penomoran</h2>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-7 space-y-5 transform transition-all border border-slate-700/20" id="modalContent">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-700">
+                <h2 id="modalTitle" class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Tambah Ajuan Penomoran</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
@@ -164,33 +268,33 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">PIC BMN</label>
-                    <select id="inputPicBmn" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN</label>
+                    <select id="inputPicBmn" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Jenis Formulir</label>
-                    <select id="inputJenisFormulir" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Jenis Formulir</label>
+                    <select id="inputJenisFormulir" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1.5">Pekerjaan / Keterangan</label>
-                <textarea id="inputPekerjaan" rows="3" placeholder="Ketik nama pekerjaan atau keterangan surat..." class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pekerjaan / Keterangan</label>
+                <textarea id="inputPekerjaan" rows="3" placeholder="Ketik nama pekerjaan atau keterangan surat..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Surat</label>
-                    <input id="inputTanggal" type="date" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Surat</label>
+                    <input id="inputTanggal" type="date" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Tempat / Tujuan Barang</label>
-                    <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 rounded-xl px-3.5 py-3 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tempat / Tujuan Barang</label>
+                    <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200">
-                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors">Batal</button>
+            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Batal</button>
                 <button id="btnSimpan" onclick="simpanDataCloud()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md transition-colors flex items-center">
                     <i class="fas fa-cloud-upload-alt mr-2"></i>Simpan ke Cloud
                 </button>
@@ -200,10 +304,10 @@
 
     <!-- ================= MODAL SPREADSHEET ================= -->
     <div id="modalSpreadsheetOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="bg-white w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden m-4">
-            <div class="flex justify-between items-center px-5 py-3 border-b">
-                <h2 class="text-base font-bold text-[#1e3264] flex items-center"><i class="fas fa-file-excel text-green-600 mr-2"></i> Spreadsheet Penomoran</h2>
-                <button onclick="closeModalSpreadsheet()" class="text-slate-400 hover:text-slate-600 bg-slate-100 h-7 w-7 rounded-full flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+        <div class="bg-white dark:bg-slate-800 w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden m-4 border border-slate-700/20">
+            <div class="flex justify-between items-center px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+                <h2 class="text-base font-bold text-[#1e3264] dark:text-blue-400 flex items-center"><i class="fas fa-file-excel text-green-600 mr-2"></i> Spreadsheet Penomoran</h2>
+                <button onclick="closeModalSpreadsheet()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-7 w-7 rounded-full flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
             <div class="flex-1 w-full bg-slate-50 relative">
                 <iframe id="iframeSpreadsheet" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
@@ -213,31 +317,31 @@
 
     <!-- ================= MODAL PENGATURAN (SETTINGS) ================= -->
     <div id="modalSettingsOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center px-4">
-        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
-            <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50">
-                <h2 class="text-xl font-bold text-[#1e3264] flex items-center">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden border border-slate-700/20">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <h2 class="text-xl font-bold text-[#1e3264] dark:text-blue-400 flex items-center">
                     <i class="fas fa-cog text-amber-500 mr-2"></i> Pengaturan Sistem
-                    <span id="syncIndicator" class="ml-3 text-[10px] font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full hidden"><i class="fas fa-check-circle mr-1"></i> Tersinkronisasi ke Cloud</span>
+                    <span id="syncIndicator" class="ml-3 text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full hidden"><i class="fas fa-check-circle mr-1"></i> Tersinkronisasi ke Cloud</span>
                 </h2>
-                <button onclick="closeModalSettings()" class="text-slate-400 hover:text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
+                <button onclick="closeModalSettings()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
 
-            <div class="flex px-6 pt-3 border-b border-slate-200 bg-slate-50">
-                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">Jenis Formulir & Template</button>
-                <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Daftar PIC BMN</button>
-                <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Koneksi Sistem (Cloud)</button>
+            <div class="flex px-6 pt-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Jenis Formulir & Template</button>
+                <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors">Daftar PIC BMN</button>
+                <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors">Koneksi Sistem (Cloud)</button>
             </div>
 
             <!-- Tab Content: Jenis Formulir -->
-            <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                <div id="boxFormJenis" class="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 transition-all">
-                    <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 mb-2">Tambah Jenis Formulir & Template</h3>
+            <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
+                <div id="boxFormJenis" class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 transition-all">
+                    <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">Tambah Jenis Formulir & Template</h3>
                     <div class="flex flex-col gap-3">
-                        <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisUrl" placeholder="URL template Word, contoh: https://.../templates/F02.docx..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisUrl" placeholder="URL template Word, contoh: https://.../templates/F02.docx..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
                         
                         <div class="flex justify-end gap-2">
                             <button id="btnBatalEditJenis" onclick="batalEditJenis()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-times mr-1"></i> Batal</button>
@@ -246,55 +350,64 @@
                     </div>
                 </div>
 
-                <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
-                    <thead class="bg-slate-100 text-xs text-slate-600">
+                <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                    <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
                         <tr>
-                            <th class="px-3 py-2 border-b w-[30%]">NAMA JENIS FORMULIR</th>
-                            <th class="px-3 py-2 border-b w-[30%]">FORMAT PENOMORAN</th>
-                            <th class="px-3 py-2 border-b w-[25%]">TEMPLATE DATA</th>
-                            <th class="px-3 py-2 border-b w-[15%] text-center">AKSI</th>
+                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">NAMA JENIS FORMULIR</th>
+                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">FORMAT PENOMORAN</th>
+                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[25%]">TEMPLATE DATA</th>
+                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[15%] text-center">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodySettingJenis" class="text-sm text-slate-700"></tbody>
+                    <tbody id="tbodySettingJenis" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
                 </table>
             </div>
 
             <!-- Tab Content: PIC BMN -->
-            <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                <div class="mb-4 bg-purple-50 border border-purple-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-end">
+            <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
+                <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-end">
                     <div class="flex-1 w-full">
-                        <label class="block text-xs font-bold text-purple-800 mb-1">Tambah Nama PIC Baru</label>
-                        <input type="text" id="setPicNama" placeholder="Ketik nama lengkap petugas..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                        <label class="block text-xs font-bold text-purple-800 dark:text-purple-300 mb-1">Tambah Nama PIC Baru</label>
+                        <input type="text" id="setPicNama" placeholder="Ketik nama lengkap petugas..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
                     </div>
                     <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
                 </div>
-                <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
-                    <thead class="bg-slate-100 text-xs text-slate-600">
+                <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                    <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
                         <tr>
-                            <th class="px-4 py-2 border-b w-10 text-center">NO</th>
-                            <th class="px-4 py-2 border-b">NAMA PIC BMN</th>
-                            <th class="px-4 py-2 border-b w-28 text-center">AKSI</th>
+                            <th class="px-4 py-2 border-b dark:border-slate-700 w-10 text-center">NO</th>
+                            <th class="px-4 py-2 border-b dark:border-slate-700">NAMA PIC BMN</th>
+                            <th class="px-4 py-2 border-b dark:border-slate-700 w-28 text-center">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodySettingPic" class="text-sm text-slate-700"></tbody>
+                    <tbody id="tbodySettingPic" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
                 </table>
             </div>
 
             <!-- Tab Content: Sistem -->
-            <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
+            <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Apps Script (Database API)</label>
-                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" readonly>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">URL Google Apps Script (Database API)</label>
+                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-blue-500" readonly>
                         <p class="text-[10px] text-slate-400 mt-1">Hanya admin server yang dapat mengubah konfigurasi Cloud.</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Spreadsheet</label>
-                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" readonly>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">URL Google Spreadsheet</label>
+                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-blue-500" readonly>
                     </div>
                 </div>
-                <div class="mt-6 pt-5 border-t border-slate-200 flex justify-between items-center">
+                
+                <!-- Tombol Reset & Keterangan + Hubungi Pembuat -->
+                <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan ke Bawaan Awal</button>
+                    
+                    <div class="flex flex-col sm:items-end text-right w-full sm:w-auto">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-medium">Jika terjadi eror / kendala / permintaan penambahan fitur hubungi:</span>
+                        <a href="https://wa.me/6285867775660?text=Halo%20Kak%20Shodiq,%20saya%20ada%20kendala/pertanyaan%20terkait%20Aplikasi%20Penomoran%20BMN%20BBGTK%20Jabar." target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors inline-flex items-center justify-center">
+                            <i class="fab fa-whatsapp text-sm mr-1.5"></i> Hubungi Pembuat (Shodiq BMN)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -309,39 +422,36 @@
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         
         const DEFAULT_JENIS = [
-    { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
-    { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
-    { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F03.docx" },
-    { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F04.docx" },
-    { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F05.docx" },
-    { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F06.docx" },
-    { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F07.docx" },
-    { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F08.docx" },
-    { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F09.docx" },
-    { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F11.docx" },
-    { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F12.docx" },
-    { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F13.docx" },
-    { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F14.docx" },
-    { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F19.docx" },
-    { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F23.docx" },
-    { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
-    { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" }
-];
+            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
+            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
+            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F03.docx" },
+            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F04.docx" },
+            { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F05.docx" },
+            { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F06.docx" },
+            { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F07.docx" },
+            { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F08.docx" },
+            { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F09.docx" },
+            { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F11.docx" },
+            { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F12.docx" },
+            { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F13.docx" },
+            { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F14.docx" },
+            { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F19.docx" },
+            { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F23.docx" },
+            { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+            { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" }
+        ];
 
         let globalDataList = [];
-
         let curAPIUrl = DEFAULT_URL_API;
         let curSheetUrl = DEFAULT_URL_SHEET;
-
-        // Sekarang kita pakai array variabel, BUKAN dari localStorage
         let listPics = [...DEFAULT_PICS];
         let listJenis = [...DEFAULT_JENIS];
         let editingJenisIdx = -1; 
@@ -349,7 +459,124 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderDropdownsDinamis();
             loadDataDariCloud();
+            initKeyboardShortcuts();
+            initNetworkListener();
         });
+
+        // 1. TOAST NOTIFICATION MODERN
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-emerald-600 text-white";
+            let icon = "fa-check-circle";
+            if (type === 'error') { bgClass = "bg-rose-600 text-white"; icon = "fa-exclamation-circle"; }
+            else if (type === 'info') { bgClass = "bg-blue-600 text-white"; icon = "fa-info-circle"; }
+
+            toast.className = `toast-item ${bgClass} px-4 py-3 rounded-xl shadow-lg flex items-center justify-between text-xs font-semibold`;
+            toast.innerHTML = `<div class="flex items-center space-x-2"><i class="fas ${icon} text-base"></i><span>${message}</span></div>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // 2. EKSPOR LAPORAN KE EXCEL (.XLSX)
+        function exportDataExcel() {
+            if (!globalDataList || globalDataList.length === 0) {
+                showToast("Tidak ada data untuk diekspor!", "error");
+                return;
+            }
+            
+            const exportRows = globalDataList.map((item, idx) => ({
+                "No": idx + 1,
+                "Nomor Surat": item.nomorSurat || '-',
+                "Pekerjaan / Keterangan": item.pekerjaan || '-',
+                "Tempat / Tujuan": item.tempat || '-',
+                "Jenis Formulir": item.jenis || '-',
+                "PIC BMN": item.pic || '-',
+                "Tanggal": item.tanggal || '-'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Penomoran BMN");
+            
+            XLSX.writeFile(workbook, `Rekap_Penomoran_BMN_BBGTK_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showToast("Laporan Excel berhasil diunduh!", "success");
+        }
+
+        // 3. DARK MODE & LIGHT MODE TOGGLE
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const iconDark = document.getElementById('iconDark');
+            
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                iconDark.className = "fas fa-sun";
+                showToast("Mode Gelap diaktifkan", "info");
+            } else {
+                iconDark.className = "fas fa-moon";
+                showToast("Mode Terang diaktifkan", "info");
+            }
+        }
+
+        // 4. GLOBAL KEYBOARD SHORTCUTS (Tekan '/' untuk fokus pencarian)
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('filterPekerjaan');
+                    if (searchInput) {
+                        searchInput.focus();
+                        showToast("Pencarian cepat aktif", "info");
+                    }
+                }
+            });
+        }
+
+        // 5. INDIKATOR STATUS KONEKSI REAL-TIME
+        function initNetworkListener() {
+            const badge = document.getElementById('networkBadge');
+            
+            window.addEventListener('online', () => {
+                badge.className = "ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1 bg-emerald-400 rounded-full animate-pulse"></span> Online';
+                showToast("Koneksi internet terhubung kembali", "success");
+            });
+
+            window.addEventListener('offline', () => {
+                badge.className = "ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1 bg-rose-400 rounded-full"></span> Offline';
+                showToast("Perangkat terputus dari internet (Offline)", "error");
+            });
+        }
+
+        // Fungsi Toggle Mode Web / Mode HP
+        function toggleAppMode() {
+            const body = document.body;
+            const iconMode = document.getElementById('iconMode');
+            const labelModeText = document.getElementById('labelModeText');
+            const btnToggle = document.getElementById('btnToggleMode');
+
+            body.classList.toggle('mobile-emulator-mode');
+            
+            if (body.classList.contains('mobile-emulator-mode')) {
+                iconMode.className = "fas fa-mobile-alt mr-1.5";
+                labelModeText.innerText = "Mode HP";
+                btnToggle.title = "Ubah ke Mode Web";
+                showToast("Beralih ke Tampilan Simulasi HP", "info");
+            } else {
+                iconMode.className = "fas fa-desktop mr-1.5";
+                labelModeText.innerText = "Mode Web";
+                btnToggle.title = "Ubah ke Mode HP";
+                showToast("Beralih ke Tampilan Standar Web", "info");
+            }
+        }
 
         function parseTanggalLokal(tglString) {
             if (!tglString || String(tglString).trim() === "" || tglString === "-") return null;
@@ -401,31 +628,31 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             ['btn-tab-jenis', 'btn-tab-pic', 'btn-tab-sistem'].forEach(id => {
-                document.getElementById(id).className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+                document.getElementById(id).className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors";
             });
-            document.getElementById('btn-' + tabId).className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors";
+            document.getElementById('btn-' + tabId).className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors";
         }
 
         function renderSettingTables() {
             document.getElementById('tbodySettingJenis').innerHTML = listJenis.map((j, idx) => `
-                <tr class="border-b hover:bg-slate-50">
+                <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/40">
                     <td class="px-3 py-2 font-medium">${j.nama}</td>
-                    <td class="px-3 py-2 font-mono text-xs text-blue-700">${j.format}</td>
+                    <td class="px-3 py-2 font-mono text-xs text-blue-600 dark:text-blue-400">${j.format}</td>
                     <td class="px-3 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[150px]" title="${j.templateUrl || '-'}">${j.templateUrl || '-'}</td>
                     <td class="px-3 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
+                        <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/40 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
 
             document.getElementById('tbodySettingPic').innerHTML = listPics.map((p, idx) => `
-                <tr class="border-b hover:bg-slate-50">
+                <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/40">
                     <td class="px-4 py-2 text-center text-slate-400">${idx + 1}</td>
                     <td class="px-4 py-2 font-medium">${p}</td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingPic(${idx})" class="text-amber-500 hover:bg-amber-100 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                        <button onclick="editSettingPic(${idx})" class="text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/40 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
+                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -435,10 +662,11 @@
             const nama = document.getElementById('setJenisNama').value.trim();
             const format = document.getElementById('setJenisFormat').value.trim();
             const templateUrl = document.getElementById('setJenisUrl').value.trim();
-            if(!nama || !format) return alert("Nama dan format harus diisi!");
+            if(!nama || !format) { showToast("Nama dan format harus diisi!", "error"); return; }
             listJenis.push({ nama, format, templateUrl });
-            saveSettingsAndUpdate(true); // Kirim ke cloud
+            saveSettingsAndUpdate(true);
             batalEditJenis();
+            showToast("Jenis formulir berhasil ditambahkan", "success");
         }
 
         function editSettingJenis(idx) {
@@ -454,8 +682,8 @@
             btnSubmit.onclick = simpanEditJenis;
 
             document.getElementById('btnBatalEditJenis').classList.remove('hidden');
-            document.getElementById('boxFormJenis').className = "mb-4 bg-amber-50 border border-amber-300 rounded-xl p-4 transition-all";
-            document.getElementById('titleFormJenis').className = "text-sm font-bold text-amber-800 mb-2";
+            document.getElementById('boxFormJenis').className = "mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700/50 rounded-xl p-4 transition-all";
+            document.getElementById('titleFormJenis').className = "text-sm font-bold text-amber-800 dark:text-amber-300 mb-2";
             document.getElementById('titleFormJenis').innerText = "Edit Jenis Formulir & Template";
 
             document.getElementById('setJenisNama').focus(); 
@@ -466,11 +694,12 @@
             const nama = document.getElementById('setJenisNama').value.trim();
             const format = document.getElementById('setJenisFormat').value.trim();
             const templateUrl = document.getElementById('setJenisUrl').value.trim();
-            if(!nama || !format) return alert("Nama dan format harus diisi!");
+            if(!nama || !format) { showToast("Nama dan format harus diisi!", "error"); return; }
             
             listJenis[editingJenisIdx] = { nama, format, templateUrl };
             saveSettingsAndUpdate(true);
             batalEditJenis(); 
+            showToast("Perubahan formulir disimpan", "success");
         }
 
         function batalEditJenis() {
@@ -485,8 +714,8 @@
             btnSubmit.onclick = tambahSettingJenis;
 
             document.getElementById('btnBatalEditJenis').classList.add('hidden');
-            document.getElementById('boxFormJenis').className = "mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 transition-all";
-            document.getElementById('titleFormJenis').className = "text-sm font-bold text-blue-800 mb-2";
+            document.getElementById('boxFormJenis').className = "mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 transition-all";
+            document.getElementById('titleFormJenis').className = "text-sm font-bold text-blue-800 dark:text-blue-300 mb-2";
             document.getElementById('titleFormJenis').innerText = "Tambah Jenis Formulir & Template";
         }
 
@@ -495,14 +724,16 @@
             if (editingJenisIdx === idx) batalEditJenis();
             listJenis.splice(idx, 1);
             saveSettingsAndUpdate(true);
+            showToast("Jenis formulir dihapus", "info");
         }
 
         function tambahSettingPic() {
             const nama = document.getElementById('setPicNama').value.trim();
-            if(!nama) return alert("Nama PIC harus diisi!");
+            if(!nama) { showToast("Nama PIC harus diisi!", "error"); return; }
             listPics.push(nama);
             saveSettingsAndUpdate(true);
             document.getElementById('setPicNama').value = '';
+            showToast("PIC baru ditambahkan", "success");
         }
 
         function editSettingPic(idx) {
@@ -510,6 +741,7 @@
             if (namaBaru !== null && namaBaru.trim() !== "") {
                 listPics[idx] = namaBaru.trim();
                 saveSettingsAndUpdate(true);
+                showToast("Nama PIC diperbarui", "success");
             }
         }
 
@@ -517,6 +749,7 @@
             if(!confirm("Hapus PIC ini?")) return;
             listPics.splice(idx, 1);
             saveSettingsAndUpdate(true);
+            showToast("PIC dihapus", "info");
         }
 
         function resetPengaturanDefault() {
@@ -524,7 +757,7 @@
             listPics = [...DEFAULT_PICS];
             listJenis = [...DEFAULT_JENIS];
             saveSettingsAndUpdate(true);
-            alert("✅ Pengaturan telah dikembalikan ke awal dan disinkronisasi.");
+            showToast("Pengaturan dikembalikan ke awal", "success");
             closeModalSettings();
         }
 
@@ -535,7 +768,7 @@
             if (syncToCloud) {
                 const indicator = document.getElementById('syncIndicator');
                 indicator.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan ke Cloud...';
-                indicator.className = "ml-3 text-[10px] font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full inline-block";
+                indicator.className = "ml-3 text-[10px] font-normal bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded-full inline-block";
                 
                 const payload = { action: "simpan_pengaturan", pics: listPics, jenis: listJenis };
                 try {
@@ -543,12 +776,12 @@
                     const res = await response.json();
                     if(res.status === "success") {
                         indicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Tersinkronisasi';
-                        indicator.className = "ml-3 text-[10px] font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full inline-block";
+                        indicator.className = "ml-3 text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full inline-block";
                         setTimeout(() => indicator.classList.add('hidden'), 3000);
                     }
                 } catch (e) {
                     indicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal Simpan';
-                    indicator.className = "ml-3 text-[10px] font-normal bg-red-100 text-red-700 px-2 py-0.5 rounded-full inline-block";
+                    indicator.className = "ml-3 text-[10px] font-normal bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 px-2 py-0.5 rounded-full inline-block";
                     console.error("Gagal sync pengaturan", e);
                 }
             }
@@ -574,11 +807,9 @@
                 const result = await response.json();
                 tableBody.innerHTML = ''; 
                 
-                // === INI BAGIAN PENTING: MENGAMBIL PENGATURAN DARI CLOUD ===
                 if (result.pics && Array.isArray(result.pics) && result.pics.length > 0) listPics = result.pics;
                 if (result.jenis && Array.isArray(result.jenis) && result.jenis.length > 0) listJenis = result.jenis;
-                saveSettingsAndUpdate(false); // Update tampilan dropdown tanpa mengirim balik ke cloud
-                // ==========================================================
+                saveSettingsAndUpdate(false);
 
                 if(!result.data || result.data.length === 0) {
                     globalDataList = [];
@@ -586,12 +817,14 @@
                 } else {
                     globalDataList = result.data;
                     [...result.data].reverse().forEach(item => renderRowData(item));
+                    showToast("Data berhasil dimuat dari Cloud", "success");
                 }
                 generateRekap();
             } catch (error) {
                 console.error("Gagal load data:", error);
                 tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan API URL benar.</td></tr>`;
                 globalDataList = [];
+                showToast("Gagal terhubung ke server Cloud", "error");
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
         }
@@ -611,40 +844,39 @@
             }
 
             const tr = document.createElement('tr');
-            tr.className = "border-b border-slate-100 hover:bg-slate-50/80 transition-colors";
+            tr.className = "border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition-colors";
             tr.dataset.jenis = data.jenis || '';
             tr.dataset.pic = data.pic || '';
             tr.dataset.pekerjaan = data.pekerjaan || '';
             tr.dataset.tempat = data.tempat || '';
 
             tr.innerHTML = `
-                <td class="px-3 py-2.5 text-center font-semibold text-slate-500">${data.no || '-'}</td>
-                <td class="px-4 py-2.5"><div class="font-semibold text-slate-800 line-clamp-2">${data.pekerjaan || '-'}</div></td>
-                <td class="px-4 py-2.5 text-slate-600">${data.tempat || '-'}</td>
+                <td class="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400">${data.no || '-'}</td>
+                <td class="px-4 py-2.5"><div class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">${data.pekerjaan || '-'}</div></td>
+                <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">${data.tempat || '-'}</td>
                 <td class="px-4 py-2.5 text-center">
-                    <span class="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
-                    <div class="flex items-center justify-between bg-blue-50/80 border border-blue-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                        <span class="text-xs font-bold text-blue-700 tracking-wide">${data.nomorSurat || '-'}</span>
-                        <button onclick="salinNomorTabel(this)" class="bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all"><i class="far fa-copy"></i></button>
+                    <span class="inline-block bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
+                    <div class="flex items-center justify-between bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-2.5 py-1.5 shadow-2xs">
+                        <span class="text-xs font-bold text-blue-700 dark:text-blue-300 tracking-wide">${data.nomorSurat || '-'}</span>
+                        <button onclick="salinNomorTabel(this)" class="bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 border border-blue-300 dark:border-blue-700 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all" title="Salin Nomor"><i class="far fa-copy"></i></button>
                     </div>
                 </td>
-                <td class="px-4 py-2.5 text-center text-slate-700 font-medium">${data.pic || '-'}</td>
+                <td class="px-4 py-2.5 text-center text-slate-700 dark:text-slate-300 font-medium">${data.pic || '-'}</td>
                 <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                    <div class="font-bold text-slate-800 text-xs">${namaHari}</div>
-                    <div class="text-slate-600 text-[11px] font-medium mt-0.5">${formatTgl}</div>
+                    <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">${namaHari}</div>
+                    <div class="text-slate-600 dark:text-slate-400 text-[11px] font-medium mt-0.5">${formatTgl}</div>
                 </td>
                 <td class="px-3 py-2.5 text-center">
                     <div class="flex items-center justify-center space-x-1">
-                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
-                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50" title="Download Word (.docx)"><i class="fas fa-download text-[10px]"></i></button>
-                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
+                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
+                        <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30" title="Download Word (.docx)"><i class="fas fa-download text-[10px]"></i></button>
+                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </td>
             `;
             tableBody.appendChild(tr);
         }
 
-        // ================= FUNGSI DOWNLOAD TEMPLATE WORD (.DOCX) =================
         async function downloadDraft(button) {
             const tr = button.closest('tr');
             const no = tr.querySelector('td:nth-child(1)')?.innerText.trim() || '';
@@ -658,12 +890,12 @@
             const template = listJenis.find(item => item.nama === jenis);
 
             if (!template) {
-                alert("❌ Jenis formulir tidak ditemukan di pengaturan template.");
+                showToast("Jenis formulir tidak ditemukan di pengaturan template.", "error");
                 return;
             }
 
             if (!template.templateUrl) {
-                alert(`⚠️ Template untuk "${jenis}" belum diatur link filenya.`);
+                showToast(`Template untuk "${jenis}" belum diatur link filenya.`, "error");
                 return;
             }
 
@@ -671,10 +903,11 @@
             button.disabled = true;
             button.title = "Membuat formulir...";
             button.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i>';
+            showToast("Sedang memproses dokumen Word...", "info");
 
             try {
                 if (typeof PizZip === 'undefined' && typeof window.PizZip === 'undefined') {
-                    throw new Error("Library PizZip gagal dimuat oleh browser akibat pembatasan jaringan/firewall.");
+                    throw new Error("Library PizZip gagal dimuat oleh browser.");
                 }
                 const ZipLib = window.PizZip || PizZip;
                 const DocLib = window.docxtemplater || docxtemplater;
@@ -694,15 +927,7 @@
                     delimiters: { start: '{{', end: '}}' }
                 });
 
-                doc.render({
-                    nomorSurat: nomorSurat,
-                    pekerjaan: pekerjaan,
-                    tempat: tempat,
-                    tanggal: tanggal,
-                    pic: pic,
-                    no: no,
-                    jenis: jenis
-                });
+                doc.render({ nomorSurat, pekerjaan, tempat, tanggal, pic, no, jenis });
 
                 const output = doc.getZip().generate({
                     type: 'blob',
@@ -711,10 +936,11 @@
 
                 const safeFileName = (nomorSurat || jenis || 'Formulir BMN').replace(/[\/\\?%*:|"<>]/g, '-').trim();
                 saveAs(output, `${safeFileName}.docx`);
+                showToast("Dokumen Word berhasil diunduh!", "success");
 
             } catch (error) {
                 console.error("Gagal generate docx:", error);
-                alert("❌ Gagal membuat dokumen Word: " + error.message);
+                showToast("Gagal membuat dokumen: " + error.message, "error");
             } finally {
                 button.disabled = false;
                 button.title = "Download Word (.docx)";
@@ -727,6 +953,7 @@
             navigator.clipboard.writeText(noSurat).then(() => {
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check text-green-600"></i>';
+                showToast("Nomor surat berhasil disalin", "success");
                 setTimeout(() => { btn.innerHTML = originalHtml; }, 1200);
             });
         }
@@ -774,17 +1001,17 @@
 
             const sortedJenis = Object.entries(jenisMap).sort((a,b) => b[1] - a[1]);
             document.getElementById('listRekapJenis').innerHTML = sortedJenis.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedJenis.map(([nama, count]) => `
-                <div class="flex justify-between items-center px-3 py-2 border-b text-xs hover:bg-slate-50">
-                    <span class="font-medium text-slate-700 truncate pr-2">${nama}</span>
-                    <span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
+                <div class="flex justify-between items-center px-3 py-2 border-b dark:border-slate-700 text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                    <span class="font-medium text-slate-700 dark:text-slate-300 truncate pr-2">${nama}</span>
+                    <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
                 </div>
             `).join('');
 
             const sortedPic = Object.entries(picMap).sort((a,b) => b[1] - a[1]);
             document.getElementById('listRekapPIC').innerHTML = sortedPic.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedPic.map(([nama, count]) => `
-                <div class="flex justify-between items-center px-3 py-2 border-b text-xs hover:bg-slate-50">
-                    <span class="font-medium text-slate-700 truncate pr-2">${nama}</span>
-                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
+                <div class="flex justify-between items-center px-3 py-2 border-b dark:border-slate-700 text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                    <span class="font-medium text-slate-700 dark:text-slate-300 truncate pr-2">${nama}</span>
+                    <span class="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
                 </div>
             `).join('');
         }
@@ -811,7 +1038,7 @@
 
         function openModalEdit(rowIndex) {
             const data = globalDataList.find(d => Number(d.rowIndex) === Number(rowIndex));
-            if(!data) return alert("Data tidak ditemukan!");
+            if(!data) { showToast("Data tidak ditemukan!", "error"); return; }
             
             document.getElementById('modalTitle').innerText = "Edit Ajuan Penomoran";
             document.getElementById('inputRowIndex').value = data.rowIndex;
@@ -847,12 +1074,14 @@
             const tempat = document.getElementById('inputTempat').value.trim();
 
             if(!pic || !jenis || !pekerjaan || !tanggal || !tempat) {
-                return alert("Semua field form wajib diisi!");
+                showToast("Semua field form wajib diisi!", "error");
+                return;
             }
 
             const btnSimpan = document.getElementById('btnSimpan');
             btnSimpan.disabled = true;
             btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+            showToast("Menyimpan data ke Cloud...", "info");
 
             const payload = {
                 action: rowIndex === "" ? "tambah" : "edit",
@@ -867,14 +1096,14 @@
                 });
                 const res = await response.json();
                 if(res.status === "success" || res.result === "success") {
-                    alert("✅ Berhasil disimpan ke Cloud!");
+                    showToast("Berhasil disimpan ke Cloud!", "success");
                     closeModal();
                     loadDataDariCloud();
                 } else {
-                    alert("❌ Gagal: " + (res.message || "Unknown error"));
+                    showToast("Gagal: " + (res.message || "Unknown error"), "error");
                 }
             } catch (e) {
-                alert("❌ Terjadi kesalahan jaringan: " + e.message);
+                showToast("Terjadi kesalahan jaringan: " + e.message, "error");
             } finally {
                 btnSimpan.disabled = false;
                 btnSimpan.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i>Simpan ke Cloud';
@@ -883,6 +1112,7 @@
 
         async function hapusDataCloud(rowIndex) {
             if(!confirm("Hapus data ajuan ini dari database cloud?")) return;
+            showToast("Menghapus data dari Cloud...", "info");
             try {
                 const response = await fetch(curAPIUrl, {
                     method: 'POST',
@@ -890,13 +1120,13 @@
                 });
                 const res = await response.json();
                 if(res.status === "success" || res.result === "success") {
-                    alert("✅ Data berhasil dihapus!");
+                    showToast("Data berhasil dihapus!", "success");
                     loadDataDariCloud();
                 } else {
-                    alert("❌ Gagal menghapus: " + (res.message || "Unknown error"));
+                    showToast("Gagal menghapus: " + (res.message || "Unknown error"), "error");
                 }
             } catch (e) {
-                alert("❌ Terjadi kesalahan jaringan: " + e.message);
+                showToast("Terjadi kesalahan jaringan: " + e.message, "error");
             }
         }
     </script>
