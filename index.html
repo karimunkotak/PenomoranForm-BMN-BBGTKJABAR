@@ -85,6 +85,24 @@
         body.mobile-emulator-mode nav {
             margin-top: 10px;
         }
+
+        /* Freeze / Sticky Table Header dengan Background Solid & Batasan Tinggi Pas */
+        .freeze-table-container {
+            max-height: 62vh; /* Membatasi tinggi tabel agar bisa di-scroll secara mandiri */
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .freeze-table-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background-color: #f8fafc !important; /* Solid Light Mode */
+            box-shadow: inset 0 -2px 0 #cbd5e1;
+        }
+        .dark .freeze-table-container thead th {
+            background-color: #1e293b !important; /* Solid Dark Mode */
+            box-shadow: inset 0 -2px 0 #334155;
+        }
     </style>
 </head>
 <body class="bg-[#f4f7fb] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-10">
@@ -167,11 +185,12 @@
                 </div>
             </div>
 
+            <!-- Container Tabel dengan Freeze Header & Pagination 20 Baris per Halaman -->
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="overflow-x-auto custom-scrollbar">
+                <div class="freeze-table-container custom-scrollbar">
                     <table class="w-full text-left border-collapse table-auto">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                            <tr class="border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300 tracking-wider">
                                 <th class="px-3 py-3 align-middle w-10 text-center">NO</th>
                                 <th class="px-4 py-3 align-top w-[25%]">
                                     <div class="flex flex-col space-y-1">
@@ -205,6 +224,12 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Footer Pagination (Maksimal 20 baris per halaman) -->
+                <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div id="paginationInfo" class="text-xs text-slate-500 dark:text-slate-400">Menampilkan 0 dari 0 data</div>
+                    <div id="paginationButtons" class="flex items-center space-x-1"></div>
                 </div>
             </div>
         </main>
@@ -393,7 +418,7 @@
                         <p class="text-[10px] text-slate-400 mt-1">Hanya admin server yang dapat mengubah konfigurasi Cloud.</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">URL Google Spreadsheet</label>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-700 mb-2">URL Google Spreadsheet</label>
                         <input type="text" id="setSheetUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-blue-500" readonly>
                     </div>
                 </div>
@@ -450,11 +475,15 @@
         ];
 
         let globalDataList = [];
+        let filteredDataList = [];
         let curAPIUrl = DEFAULT_URL_API;
         let curSheetUrl = DEFAULT_URL_SHEET;
         let listPics = [...DEFAULT_PICS];
         let listJenis = [...DEFAULT_JENIS];
         let editingJenisIdx = -1; 
+        
+        let currentPage = 1;
+        const rowsPerPage = 20;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderDropdownsDinamis();
@@ -463,7 +492,7 @@
             initNetworkListener();
         });
 
-        // 1. TOAST NOTIFICATION MODERN
+        // TOAST NOTIFICATION MODERN
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -485,7 +514,7 @@
             }, 3500);
         }
 
-        // 2. EKSPOR LAPORAN KE EXCEL (.XLSX)
+        // EKSPOR LAPORAN KE EXCEL (.XLSX)
         function exportDataExcel() {
             if (!globalDataList || globalDataList.length === 0) {
                 showToast("Tidak ada data untuk diekspor!", "error");
@@ -510,7 +539,7 @@
             showToast("Laporan Excel berhasil diunduh!", "success");
         }
 
-        // 3. DARK MODE & LIGHT MODE TOGGLE
+        // DARK MODE & LIGHT MODE TOGGLE
         function toggleDarkMode() {
             const html = document.documentElement;
             const iconDark = document.getElementById('iconDark');
@@ -525,7 +554,7 @@
             }
         }
 
-        // 4. GLOBAL KEYBOARD SHORTCUTS (Tekan '/' untuk fokus pencarian)
+        // GLOBAL KEYBOARD SHORTCUTS
         function initKeyboardShortcuts() {
             document.addEventListener('keydown', (e) => {
                 if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -539,7 +568,7 @@
             });
         }
 
-        // 5. INDIKATOR STATUS KONEKSI REAL-TIME
+        // INDIKATOR STATUS KONEKSI REAL-TIME
         function initNetworkListener() {
             const badge = document.getElementById('networkBadge');
             
@@ -805,7 +834,6 @@
                 const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
                 const response = await fetch(antiCacheUrl);
                 const result = await response.json();
-                tableBody.innerHTML = ''; 
                 
                 if (result.pics && Array.isArray(result.pics) && result.pics.length > 0) listPics = result.pics;
                 if (result.jenis && Array.isArray(result.jenis) && result.jenis.length > 0) listJenis = result.jenis;
@@ -813,10 +841,14 @@
 
                 if(!result.data || result.data.length === 0) {
                     globalDataList = [];
+                    filteredDataList = [];
                     tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
+                    renderPagination();
                 } else {
-                    globalDataList = result.data;
-                    [...result.data].reverse().forEach(item => renderRowData(item));
+                    globalDataList = [...result.data].reverse(); // Urutkan terbaru di atas
+                    filteredDataList = [...globalDataList];
+                    currentPage = 1;
+                    renderTablePage();
                     showToast("Data berhasil dimuat dari Cloud", "success");
                 }
                 generateRekap();
@@ -824,9 +856,31 @@
                 console.error("Gagal load data:", error);
                 tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan API URL benar.</td></tr>`;
                 globalDataList = [];
+                filteredDataList = [];
                 showToast("Gagal terhubung ke server Cloud", "error");
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
+        }
+
+        function renderTablePage() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            if (filteredDataList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Tidak ada data yang cocok.</td></tr>`;
+                renderPagination();
+                return;
+            }
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedItems = filteredDataList.slice(startIdx, endIdx);
+
+            paginatedItems.forEach(item => {
+                renderRowData(item);
+            });
+
+            renderPagination();
         }
 
         function renderRowData(data) {
@@ -875,6 +929,51 @@
                 </td>
             `;
             tableBody.appendChild(tr);
+        }
+
+        function renderPagination() {
+            const totalRows = filteredDataList.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startData = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+            const endData = Math.min(currentPage * rowsPerPage, totalRows);
+
+            document.getElementById('paginationInfo').innerText = `Menampilkan ${startData} - ${endData} dari ${totalRows} data`;
+
+            let buttonsHtml = '';
+            
+            // Tombol Prev
+            buttonsHtml += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded text-xs cursor-not-allowed"' : 'class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700"'}>Prev</button>`;
+
+            // Nomor Halaman
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    if (i === currentPage) {
+                        buttonsHtml += `<button class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-bold">${i}</button>`;
+                    } else {
+                        buttonsHtml += `<button onclick="changePage(${i})" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700">${i}</button>`;
+                    }
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    buttonsHtml += `<span class="px-2 text-slate-400 text-xs">...</span>`;
+                }
+            }
+
+            // Tombol Next
+            buttonsHtml += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded text-xs cursor-not-allowed"' : 'class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700"'}>Next</button>`;
+
+            document.getElementById('paginationButtons').innerHTML = buttonsHtml;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredDataList.length / rowsPerPage) || 1;
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTablePage();
+            
+            // Scroll ke bagian atas kontainer tabel agar nyaman dilihat
+            const container = document.querySelector('.freeze-table-container');
+            if(container) container.scrollTop = 0;
         }
 
         async function downloadDraft(button) {
@@ -963,23 +1062,20 @@
             const filterJenis = document.getElementById('filterJenis').value.toLowerCase();
             const filterPIC = document.getElementById('filterPIC').value.toLowerCase();
             
-            const rows = document.querySelectorAll('#tableBody tr');
-            rows.forEach(row => {
-                if(row.id === 'rowLoading') return;
-                const pekerjaan = (row.dataset.pekerjaan || '').toLowerCase();
-                const jenis = (row.dataset.jenis || '').toLowerCase();
-                const pic = (row.dataset.pic || '').toLowerCase();
+            filteredDataList = globalDataList.filter(item => {
+                const pekerjaan = (item.pekerjaan || '').toLowerCase();
+                const jenis = (item.jenis || '').toLowerCase();
+                const pic = (item.pic || '').toLowerCase();
                 
                 const matchPekerjaan = pekerjaan.includes(filterPekerjaan);
                 const matchJenis = filterJenis === "" || jenis === filterJenis;
                 const matchPIC = filterPIC === "" || pic === filterPIC;
 
-                if (matchPekerjaan && matchJenis && matchPIC) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+                return matchPekerjaan && matchJenis && matchPIC;
             });
+
+            currentPage = 1;
+            renderTablePage();
         }
 
         function generateRekap() {
