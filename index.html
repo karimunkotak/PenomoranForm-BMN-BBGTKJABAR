@@ -217,6 +217,7 @@
             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-slate-50">
                 <h2 class="text-xl font-bold text-[#1e3264] flex items-center">
                     <i class="fas fa-cog text-amber-500 mr-2"></i> Pengaturan Sistem
+                    <span id="syncIndicator" class="ml-3 text-[10px] font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full hidden"><i class="fas fa-check-circle mr-1"></i> Tersinkronisasi ke Cloud</span>
                 </h2>
                 <button onclick="closeModalSettings()" class="text-slate-400 hover:text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
                     <i class="fas fa-times text-lg"></i>
@@ -284,18 +285,16 @@
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Apps Script (Database API)</label>
-                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" readonly>
+                        <p class="text-[10px] text-slate-400 mt-1">Hanya admin server yang dapat mengubah konfigurasi Cloud.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Spreadsheet</label>
-                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 bg-slate-50 focus:outline-none focus:border-blue-500" readonly>
                     </div>
                 </div>
                 <div class="mt-6 pt-5 border-t border-slate-200 flex justify-between items-center">
-                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan</button>
-                    <button onclick="simpanPengaturanSistem()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors">
-                        <i class="fas fa-lock mr-1.5"></i> Simpan URL Sistem
-                    </button>
+                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan ke Bawaan Awal</button>
                 </div>
             </div>
         </div>
@@ -310,42 +309,41 @@
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
         
         const DEFAULT_JENIS = [
-            { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
-            { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
-            { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F03.docx" },
-            { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F04.docx" },
-            { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}", templateUrl: "" },
-            { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
-            { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" }
-        ];
+    { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
+    { nama: "F2 Pengadaan Rutin", format: "F2/PSD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F02.docx" },
+    { nama: "F3 Pengadaan ATK", format: "F03/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F03.docx" },
+    { nama: "F4 Peminjaman BMN", format: "F04.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F04.docx" },
+    { nama: "F5 Penarikan Barang Inventaris Ke Gudang BMN", format: "F05.BI/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F05.docx" },
+    { nama: "F6 Ajuan Perbaikan Dan Belanja Perbaikan Barang/Ruangan/Gedung/Kendaraan", format: "F06.AP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F06.docx" },
+    { nama: "F7 Pengajuan Pengadaan Jasa Operasional Perkantoran", format: "F07.PJ/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F07.docx" },
+    { nama: "F8 Peminjaman Gedung/Ruang Kelas/Ruang Rapat/Lab/Kamar Wisma", format: "P.GR/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F08.docx" },
+    { nama: "F9 Peminjaman Inventaris Kendaraan Dinas", format: "F09.IKD/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F09.docx" },
+    { nama: "F11 Berita Acara Serah Terima Distribusi Barang Inventaris", format: "F11.BAST.INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F11.docx" },
+    { nama: "F12 Berita Acara Serah Terima Distribusi Barang Persediaan Rutin Kantor", format: "F12/BAST-BP/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F12.docx" },
+    { nama: "F13 Berita Acara Serah Terima Distribusi Barang Atk/Kit/Persediaan Kegiatan", format: "F13.BAST.PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F13.docx" },
+    { nama: "F14 Berita Acara Serah Terima Penggunaan Barang", format: "F14.BAST.PU/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F14.docx" },
+    { nama: "F19 Formulir Pengembalian Inventaris Kendaraan Dinas", format: "F19.PE.IN/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F19.docx" },
+    { nama: "F23 Tanda Terima Pengembalian Barang Atk/Kit/Persediaan Kegiatan", format: "F23/PB/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F23.docx" },
+    { nama: "Dokumen RKBMN", format: "LK.00.00/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen Penetapan Status Penggunaan usul Penetapan Status Penggunaan", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen Pemanfaatan BMN (sewa, pinjam pakai)", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen pemindahtanganan/penghapusan/pemusnahan", format: "LK.06.01/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen lelang BMN", format: "LK.01.03/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen Inventarisasi BMN", format: "LK.03.04/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen Pengawasan dan Pengendalian", format: "LK.00.02/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Laporan Barang Milik Negara", format: "LK.05.05/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen penatausahaan BMN", format: "LK.04.00/{romawi}/{thn}", templateUrl: "" },
+    { nama: "Dokumen Persediaan", format: "LK.05.02/{romawi}/{thn}", templateUrl: "" }
+];
 
         let globalDataList = [];
 
-        // 100% OTOMATIS: Selalu paksa menggunakan URL bawaan terbaru dari GitHub
         let curAPIUrl = DEFAULT_URL_API;
         let curSheetUrl = DEFAULT_URL_SHEET;
 
-        // Untuk list PIC & Jenis, jika user belum pernah ubah, pakai default. Jika ada update dari kode, otomatis sinkron.
-        let listPics = JSON.parse(localStorage.getItem('bmn_pics_v2')) || DEFAULT_PICS;
-        let listJenis = JSON.parse(localStorage.getItem('bmn_jenis_v2')) || DEFAULT_JENIS;
+        // Sekarang kita pakai array variabel, BUKAN dari localStorage
+        let listPics = [...DEFAULT_PICS];
+        let listJenis = [...DEFAULT_JENIS];
         let editingJenisIdx = -1; 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -439,7 +437,7 @@
             const templateUrl = document.getElementById('setJenisUrl').value.trim();
             if(!nama || !format) return alert("Nama dan format harus diisi!");
             listJenis.push({ nama, format, templateUrl });
-            saveSettingsAndUpdate();
+            saveSettingsAndUpdate(true); // Kirim ke cloud
             batalEditJenis();
         }
 
@@ -471,9 +469,8 @@
             if(!nama || !format) return alert("Nama dan format harus diisi!");
             
             listJenis[editingJenisIdx] = { nama, format, templateUrl };
-            saveSettingsAndUpdate();
+            saveSettingsAndUpdate(true);
             batalEditJenis(); 
-            alert("✅ Jenis formulir berhasil diperbarui!");
         }
 
         function batalEditJenis() {
@@ -497,14 +494,14 @@
             if(!confirm("Hapus jenis ini?")) return;
             if (editingJenisIdx === idx) batalEditJenis();
             listJenis.splice(idx, 1);
-            saveSettingsAndUpdate();
+            saveSettingsAndUpdate(true);
         }
 
         function tambahSettingPic() {
             const nama = document.getElementById('setPicNama').value.trim();
             if(!nama) return alert("Nama PIC harus diisi!");
             listPics.push(nama);
-            saveSettingsAndUpdate();
+            saveSettingsAndUpdate(true);
             document.getElementById('setPicNama').value = '';
         }
 
@@ -512,40 +509,49 @@
             const namaBaru = prompt("Ubah Nama PIC:", listPics[idx]);
             if (namaBaru !== null && namaBaru.trim() !== "") {
                 listPics[idx] = namaBaru.trim();
-                saveSettingsAndUpdate();
+                saveSettingsAndUpdate(true);
             }
         }
 
         function hapusSettingPic(idx) {
             if(!confirm("Hapus PIC ini?")) return;
             listPics.splice(idx, 1);
-            saveSettingsAndUpdate();
-        }
-
-        function simpanPengaturanSistem() {
-            const pin = prompt("🔒 Masukkan PIN Admin:");
-            if (pin !== PIN_ADMIN) return alert("❌ PIN Salah!");
-            alert("✅ URL Sistem sudah diatur otomatis terpusat dari server.");
-            closeModalSettings();
+            saveSettingsAndUpdate(true);
         }
 
         function resetPengaturanDefault() {
-            if(!confirm("Reset pengaturan lokal browser?")) return;
-            localStorage.removeItem('bmn_pics_v2');
-            localStorage.removeItem('bmn_jenis_v2');
+            if(!confirm("Reset ke pengaturan awal? Data di server Cloud juga akan tertimpa.")) return;
             listPics = [...DEFAULT_PICS];
             listJenis = [...DEFAULT_JENIS];
-            saveSettingsAndUpdate();
-            alert("✅ Berhasil direset ke pengaturan pusat.");
+            saveSettingsAndUpdate(true);
+            alert("✅ Pengaturan telah dikembalikan ke awal dan disinkronisasi.");
             closeModalSettings();
-            loadDataDariCloud();
         }
 
-        function saveSettingsAndUpdate() {
-            localStorage.setItem('bmn_pics_v2', JSON.stringify(listPics));
-            localStorage.setItem('bmn_jenis_v2', JSON.stringify(listJenis));
+        async function saveSettingsAndUpdate(syncToCloud = false) {
             renderSettingTables();
             renderDropdownsDinamis();
+
+            if (syncToCloud) {
+                const indicator = document.getElementById('syncIndicator');
+                indicator.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan ke Cloud...';
+                indicator.className = "ml-3 text-[10px] font-normal bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full inline-block";
+                
+                const payload = { action: "simpan_pengaturan", pics: listPics, jenis: listJenis };
+                try {
+                    const response = await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify(payload) });
+                    const res = await response.json();
+                    if(res.status === "success") {
+                        indicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Tersinkronisasi';
+                        indicator.className = "ml-3 text-[10px] font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full inline-block";
+                        setTimeout(() => indicator.classList.add('hidden'), 3000);
+                    }
+                } catch (e) {
+                    indicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal Simpan';
+                    indicator.className = "ml-3 text-[10px] font-normal bg-red-100 text-red-700 px-2 py-0.5 rounded-full inline-block";
+                    console.error("Gagal sync pengaturan", e);
+                }
+            }
         }
 
         function renderDropdownsDinamis() {
@@ -568,6 +574,12 @@
                 const result = await response.json();
                 tableBody.innerHTML = ''; 
                 
+                // === INI BAGIAN PENTING: MENGAMBIL PENGATURAN DARI CLOUD ===
+                if (result.pics && Array.isArray(result.pics) && result.pics.length > 0) listPics = result.pics;
+                if (result.jenis && Array.isArray(result.jenis) && result.jenis.length > 0) listJenis = result.jenis;
+                saveSettingsAndUpdate(false); // Update tampilan dropdown tanpa mengirim balik ke cloud
+                // ==========================================================
+
                 if(!result.data || result.data.length === 0) {
                     globalDataList = [];
                     tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
@@ -578,7 +590,7 @@
                 generateRekap();
             } catch (error) {
                 console.error("Gagal load data:", error);
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan Deployment URL benar.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan API URL benar.</td></tr>`;
                 globalDataList = [];
             }
             setTimeout(() => { if(iconRefresh) iconRefresh.classList.remove('rotate-180'); }, 500);
@@ -876,7 +888,7 @@
                     method: 'POST',
                     body: JSON.stringify({ action: 'hapus', rowIndex: Number(rowIndex) })
                 });
-                const res = await Response.json();
+                const res = await response.json();
                 if(res.status === "success" || res.result === "success") {
                     alert("✅ Data berhasil dihapus!");
                     loadDataDariCloud();
