@@ -20,11 +20,29 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.2/build/docxtemplater.js"></script>
-    <!-- SheetJS untuk Ekspor Excel Profesional -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        /* Background Utama dengan Gradient Profesional */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
+            min-height: 100vh;
+        }
+        
+        /* Container Utama dengan Efek Kaca (Glassmorphism) yang Responsif Otomatis */
+        #appWrapper {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+            margin: 16px auto;
+            max-width: 96%;
+            padding-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -54,41 +72,9 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* Style untuk Mode HP (Mobile Frame Emulator) */
-        body.mobile-emulator-mode {
-            background-color: #0f172a !important;
-            padding-top: 20px;
-            padding-bottom: 40px;
-        }
-        body.mobile-emulator-mode #appWrapper {
-            max-width: 420px !important;
-            margin: 0 auto;
-            border-radius: 36px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 10px #1e293b;
-            overflow: hidden;
-            position: relative;
-        }
-        body.mobile-emulator-mode #appWrapper::before {
-            content: '';
-            display: block;
-            width: 120px;
-            height: 22px;
-            background-color: #1e293b;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-            z-index: 100;
-        }
-        body.mobile-emulator-mode nav {
-            margin-top: 10px;
-        }
-
-        /* Freeze / Sticky Table Header dengan Background Solid & Batasan Tinggi Pas */
+        /* Freeze / Sticky Table Header */
         .freeze-table-container {
-            max-height: 62vh; /* Membatasi tinggi tabel agar bisa di-scroll secara mandiri */
+            max-height: 65vh;
             overflow-y: auto;
             overflow-x: auto;
         }
@@ -96,86 +82,94 @@
             position: sticky;
             top: 0;
             z-index: 20;
-            background-color: #f8fafc !important; /* Solid Light Mode */
-            box-shadow: inset 0 -2px 0 #cbd5e1;
+            background-color: #ffffff !important;
+            box-shadow: inset 0 -2px 0 #e2e8f0;
+            padding: 12px 16px;
         }
-        .dark .freeze-table-container thead th {
-            background-color: #1e293b !important; /* Solid Dark Mode */
-            box-shadow: inset 0 -2px 0 #334155;
+        
+        tbody tr td {
+            padding: 16px 12px !important;
         }
+
+        /* Dark Mode Override */
+        .dark body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .dark #appWrapper { background-color: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .dark .freeze-table-container thead th { background-color: #1e293b !important; box-shadow: inset 0 -2px 0 #334155; }
     </style>
 </head>
-<body class="bg-[#f4f7fb] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-10">
+<body class="text-slate-800 dark:text-slate-100 pb-10">
 
     <!-- Container Toast Notification Mengambang -->
     <div id="toastContainer"></div>
 
-    <!-- Wrapper Utama Aplikasi untuk Mendukung Mode HP / Web -->
-    <div id="appWrapper" class="w-full bg-[#f4f7fb] dark:bg-slate-900 transition-all duration-300">
+    <!-- Wrapper Utama Aplikasi -->
+    <div id="appWrapper" class="transition-all duration-300">
 
-        <!-- Navigation Bar Compact -->
+        <!-- Navigation Bar -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-            <nav class="bg-[#1e3264] dark:bg-slate-800 text-white rounded-xl flex items-center justify-between px-5 py-3 shadow-md border border-slate-700/30">
+            <nav class="bg-[#1e3264] dark:bg-slate-800 text-white rounded-xl flex items-center justify-between px-4 sm:px-6 py-3.5 shadow-md border border-slate-700/30">
+                <!-- Title Section -->
                 <div class="flex items-center space-x-3">
-                    <i class="fas fa-file-alt text-blue-400 text-2xl"></i>
-                    <div class="text-base font-bold uppercase tracking-wide leading-tight flex items-center">
-                        <span>SISTEM INFORMASI FORMULIR BMN BBGTK JABAR</span>
-                        <!-- Indikator Koneksi Real-Time -->
-                        <span id="networkBadge" class="ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" title="Koneksi Cloud Stabil">
-                            <span class="w-1.5 h-1.5 mr-1 bg-emerald-400 rounded-full animate-pulse"></span> Online
-                        </span>
+                    <i class="fas fa-file-alt text-blue-400 text-2xl sm:text-3xl"></i>
+                    <div class="flex flex-col leading-tight">
+                        <div class="flex items-center flex-wrap gap-1">
+                            <span class="text-xs sm:text-[15px] font-bold uppercase tracking-wide">SISTEM INFORMASI FORMULIR BMN</span>
+                            <span id="networkBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Online
+                            </span>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-medium opacity-80 mt-0.5 tracking-wide">BBGTK PROVINSI JAWA BARAT</span>
                     </div>
                 </div>
-                <div class="hidden md:flex items-center space-x-2">
-                    <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer">
-                        <i class="fas fa-table-cells-large mr-1.5"></i> Data Ajuan
+
+                <!-- Menu Items (Desktop & Tablet) -->
+                <div class="hidden md:flex items-center space-x-1.5">
+                    <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border border-white/25 transition-all cursor-pointer w-20 text-center">
+                        <i class="fas fa-table-cells-large mb-1 text-[13px]"></i> Data Ajuan
                     </a>
-                    <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                        <i class="fas fa-database mr-1.5"></i> Rekap No Surat
+                    <a href="#" id="menuRekap" onclick="switchView('rekap')" class="text-slate-300 hover:text-white hover:bg-white/5 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-20 text-center">
+                        <i class="fas fa-database mb-1 text-[13px]"></i> Rekap Surat
                     </a>
-                    <a href="#" onclick="openModalSpreadsheet()" class="text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                        <i class="fas fa-file-excel mr-1.5 text-blue-300"></i> Data Base
+                    <a href="#" onclick="openModalSpreadsheet()" class="text-slate-300 hover:text-white hover:bg-white/5 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-20 text-center">
+                        <i class="fas fa-file-excel mb-1 text-[13px] text-blue-300"></i> Data Base
                     </a>
-                    <div class="w-px bg-white/20 mx-1 h-5"></div>
+                    
+                    <div class="w-px bg-white/20 mx-1.5 h-8"></div>
                     
                     <!-- Tombol Toggle Dark/Light Mode -->
-                    <button onclick="toggleDarkMode()" id="btnToggleDark" class="text-amber-300 hover:text-white hover:bg-white/10 p-2 rounded-lg text-xs transition-all cursor-pointer" title="Ganti Tema Terang/Gelap">
-                        <i class="fas fa-moon" id="iconDark"></i>
+                    <button onclick="toggleDarkMode()" id="btnToggleDark" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 flex flex-col items-center justify-center rounded-lg text-[10px] font-bold transition-all cursor-pointer w-14 text-center" title="Ganti Tema">
+                        <i class="fas fa-moon mb-1 text-[13px]" id="iconDark"></i> Tema
                     </button>
 
-                    <!-- Tombol Toggle Mode Web / HP -->
-                    <button onclick="toggleAppMode()" id="btnToggleMode" class="text-cyan-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer" title="Ubah ke Mode HP">
-                        <i class="fas fa-desktop mr-1.5" id="iconMode"></i> <span id="labelModeText">Mode Web</span>
-                    </button>
-                    <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer">
-                        <i class="fas fa-cog mr-1.5"></i> Pengaturan
+                    <!-- Tombol Setting -->
+                    <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-16 text-center" title="Pengaturan Sistem">
+                        <i class="fas fa-cog mb-1 text-[13px]"></i> Setting
                     </a>
                 </div>
             </nav>
         </div>
 
-        <!-- Mobile Menu Quick Bar khusus bawah nav jika di mode sempit -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 md:hidden flex justify-between items-center bg-slate-200 dark:bg-slate-800 p-2 rounded-lg text-xs font-semibold">
+        <!-- Mobile Quick Navigation Bar -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 md:hidden flex justify-between items-center bg-slate-200/80 dark:bg-slate-800 p-2 rounded-lg text-xs font-semibold">
             <div class="flex space-x-1">
                 <button onclick="switchView('ajuan')" class="px-2.5 py-1 bg-[#1e3264] text-white rounded"><i class="fas fa-table mr-1"></i> Ajuan</button>
                 <button onclick="switchView('rekap')" class="px-2.5 py-1 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded"><i class="fas fa-database mr-1"></i> Rekap</button>
                 <button onclick="openModalSpreadsheet()" class="px-2.5 py-1 bg-emerald-700 text-white rounded"><i class="fas fa-file-excel mr-1"></i> Sheet</button>
             </div>
             <div class="flex space-x-1">
-                <button onclick="toggleDarkMode()" class="px-2.5 py-1 bg-amber-600 text-white rounded" title="Ganti Tema"><i class="fas fa-moon"></i></button>
-                <button onclick="toggleAppMode()" class="px-2.5 py-1 bg-cyan-700 text-white rounded" title="Ganti Mode"><i class="fas fa-mobile-alt"></i></button>
-                <button onclick="openModalSettings()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-cog"></i></button>
+                <button onclick="toggleDarkMode()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-moon"></i></button>
+                <button onclick="openModalSettings()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-cog"></i> Setting</button>
             </div>
         </div>
 
         <!-- ================= VIEW 1: DATA AJUAN ================= -->
         <main id="viewDataAjuan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 transition-all duration-300">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
                 <div>
-                    <h1 class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Dashboard Data Penomoran</h1>
+                    <h1 class="text-lg sm:text-xl font-bold text-[#1e3264] dark:text-blue-400">Dashboard Data Penomoran</h1>
                     <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Tekan tombol <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono">/</kbd> di keyboard untuk pencarian cepat.</p>
                 </div>
-                <div class="flex items-center space-x-2.5 mt-2 sm:mt-0">
+                <div class="flex items-center space-x-2">
                     <button onclick="loadDataDariCloud()" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center text-xs font-medium shadow-xs transition-colors">
                         <i id="iconRefresh" class="fas fa-sync-alt mr-1.5 text-slate-400 transition-transform duration-500"></i> Refresh
                     </button>
@@ -185,7 +179,7 @@
                 </div>
             </div>
 
-            <!-- Container Tabel dengan Freeze Header & Pagination 20 Baris per Halaman -->
+            <!-- Container Tabel dengan Freeze Header & Pagination -->
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="freeze-table-container custom-scrollbar">
                     <table class="w-full text-left border-collapse table-auto">
@@ -226,7 +220,7 @@
                     </table>
                 </div>
 
-                <!-- Footer Pagination (Maksimal 20 baris per halaman) -->
+                <!-- Footer Pagination -->
                 <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div id="paginationInfo" class="text-xs text-slate-500 dark:text-slate-400">Menampilkan 0 dari 0 data</div>
                     <div id="paginationButtons" class="flex items-center space-x-1"></div>
@@ -267,13 +261,13 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[400px]">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[450px]">
                     <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 rounded-t-xl font-bold text-xs text-[#1e3264] dark:text-blue-400">Peringkat Formulir Terbanyak</div>
-                    <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapJenis"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+                    <div class="overflow-y-auto custom-scrollbar flex-1" id="listRekapJenis"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[400px]">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[450px]">
                     <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 rounded-t-xl font-bold text-xs text-[#1e3264] dark:text-blue-400">Jumlah Formulir per PIC BMN</div>
-                    <div class="p-2 overflow-y-auto custom-scrollbar flex-1" id="listRekapPIC"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
+                    <div class="overflow-y-auto custom-scrollbar flex-1" id="listRekapPIC"><div class="flex items-center justify-center h-full text-slate-400 text-xs">Memuat data...</div></div>
                 </div>
             </div>
         </main>
@@ -282,45 +276,45 @@
 
     <!-- ================= MODAL TAMBAH/EDIT AJUAN ================= -->
     <div id="modalOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-7 space-y-5 transform transition-all border border-slate-700/20" id="modalContent">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-6 sm:p-7 space-y-4 transform transition-all border border-slate-700/20" id="modalContent">
             <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-700">
-                <h2 id="modalTitle" class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Tambah Ajuan Penomoran</h2>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+                <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-[#1e3264] dark:text-blue-400">Tambah Ajuan Penomoran</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-8 w-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-base"></i>
                 </button>
             </div>
             <input type="hidden" id="inputRowIndex" value="">
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN</label>
-                    <select id="inputPicBmn" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN</label>
+                    <select id="inputPicBmn" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Jenis Formulir</label>
-                    <select id="inputJenisFormulir" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Jenis Formulir</label>
+                    <select id="inputJenisFormulir" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pekerjaan / Keterangan</label>
-                <textarea id="inputPekerjaan" rows="3" placeholder="Ketik nama pekerjaan atau keterangan surat..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pekerjaan / Keterangan</label>
+                <textarea id="inputPekerjaan" rows="3" placeholder="Ketik nama pekerjaan atau keterangan surat..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Surat</label>
-                    <input id="inputTanggal" type="date" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Surat</label>
+                    <input id="inputTanggal" type="date" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tempat / Tujuan Barang</label>
-                    <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3.5 py-3 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tempat / Tujuan Barang</label>
+                    <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
             </div>
 
             <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Batal</button>
-                <button id="btnSimpan" onclick="simpanDataCloud()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md transition-colors flex items-center">
+                <button onclick="closeModal()" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Batal</button>
+                <button id="btnSimpan" onclick="simpanDataCloud()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition-colors flex items-center">
                     <i class="fas fa-cloud-upload-alt mr-2"></i>Simpan ke Cloud
                 </button>
             </div>
@@ -328,10 +322,10 @@
     </div>
 
     <!-- ================= MODAL SPREADSHEET ================= -->
-    <div id="modalSpreadsheetOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden m-4 border border-slate-700/20">
+    <div id="modalSpreadsheetOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-5xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-700/20">
             <div class="flex justify-between items-center px-5 py-3 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-base font-bold text-[#1e3264] dark:text-blue-400 flex items-center"><i class="fas fa-file-excel text-green-600 mr-2"></i> Spreadsheet Penomoran</h2>
+                <h2 class="text-sm sm:text-base font-bold text-[#1e3264] dark:text-blue-400 flex items-center"><i class="fas fa-file-excel text-green-600 mr-2"></i> Spreadsheet Penomoran</h2>
                 <button onclick="closeModalSpreadsheet()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-7 w-7 rounded-full flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
             <div class="flex-1 w-full bg-slate-50 relative">
@@ -344,91 +338,94 @@
     <div id="modalSettingsOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center px-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden border border-slate-700/20">
             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                <h2 class="text-xl font-bold text-[#1e3264] dark:text-blue-400 flex items-center">
-                    <i class="fas fa-cog text-amber-500 mr-2"></i> Pengaturan Sistem
-                    <span id="syncIndicator" class="ml-3 text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full hidden"><i class="fas fa-check-circle mr-1"></i> Tersinkronisasi ke Cloud</span>
+                <h2 class="text-lg sm:text-xl font-bold text-[#1e3264] dark:text-blue-400 flex items-center flex-wrap gap-2">
+                    <span class="flex items-center"><i class="fas fa-cog text-amber-500 mr-2"></i> Pengaturan Sistem</span>
+                    <span id="syncIndicator" class="text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full hidden"><i class="fas fa-check-circle mr-1"></i> Tersinkronisasi</span>
                 </h2>
-                <button onclick="closeModalSettings()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 h-9 w-9 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+                <button onclick="closeModalSettings()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 h-8 w-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-base"></i>
                 </button>
             </div>
 
-            <div class="flex px-6 pt-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Jenis Formulir & Template</button>
-                <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors">Daftar PIC BMN</button>
-                <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors">Koneksi Sistem (Cloud)</button>
+            <!-- Tab Navigasi Disusun Flex Wrap -->
+            <div class="flex flex-wrap items-center px-4 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 gap-2">
+                <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Jenis Formulir</button>
+                <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 transition-colors">Daftar PIC BMN</button>
+                <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 transition-colors">Koneksi Sistem</button>
             </div>
 
             <!-- Tab Content: Jenis Formulir -->
-            <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
+            <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div id="boxFormJenis" class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 transition-all">
                     <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">Tambah Jenis Formulir & Template</h3>
                     <div class="flex flex-col gap-3">
                         <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <input type="text" id="setJenisUrl" placeholder="URL template Word, contoh: https://.../templates/F02.docx..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisUrl" placeholder="URL template Word (.docx)..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
                         
                         <div class="flex justify-end gap-2">
-                            <button id="btnBatalEditJenis" onclick="batalEditJenis()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-times mr-1"></i> Batal</button>
-                            <button id="btnSubmitJenis" onclick="tambahSettingJenis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors"><i class="fas fa-plus mr-1"></i> Tambah Jenis</button>
+                            <button id="btnBatalEditJenis" onclick="batalEditJenis()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"><i class="fas fa-times mr-1"></i> Batal</button>
+                            <button id="btnSubmitJenis" onclick="tambahSettingJenis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"><i class="fas fa-plus mr-1"></i> Tambah Jenis</button>
                         </div>
                     </div>
                 </div>
 
-                <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                    <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
-                        <tr>
-                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">NAMA JENIS FORMULIR</th>
-                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">FORMAT PENOMORAN</th>
-                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[25%]">TEMPLATE DATA</th>
-                            <th class="px-3 py-2 border-b dark:border-slate-700 w-[15%] text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodySettingJenis" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden min-w-[600px]">
+                        <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
+                            <tr>
+                                <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">NAMA JENIS FORMULIR</th>
+                                <th class="px-3 py-2 border-b dark:border-slate-700 w-[30%]">FORMAT PENOMORAN</th>
+                                <th class="px-3 py-2 border-b dark:border-slate-700 w-[25%]">TEMPLATE DATA</th>
+                                <th class="px-3 py-2 border-b dark:border-slate-700 w-[15%] text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodySettingJenis" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Tab Content: PIC BMN -->
-            <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
+            <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-end">
                     <div class="flex-1 w-full">
                         <label class="block text-xs font-bold text-purple-800 dark:text-purple-300 mb-1">Tambah Nama PIC Baru</label>
                         <input type="text" id="setPicNama" placeholder="Ketik nama lengkap petugas..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
                     </div>
-                    <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
+                    <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap w-full sm:w-auto"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
                 </div>
-                <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                    <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
-                        <tr>
-                            <th class="px-4 py-2 border-b dark:border-slate-700 w-10 text-center">NO</th>
-                            <th class="px-4 py-2 border-b dark:border-slate-700">NAMA PIC BMN</th>
-                            <th class="px-4 py-2 border-b dark:border-slate-700 w-28 text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodySettingPic" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden min-w-[400px]">
+                        <thead class="bg-slate-100 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
+                            <tr>
+                                <th class="px-4 py-2 border-b dark:border-slate-700 w-10 text-center">NO</th>
+                                <th class="px-4 py-2 border-b dark:border-slate-700">NAMA PIC BMN</th>
+                                <th class="px-4 py-2 border-b dark:border-slate-700 w-28 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodySettingPic" class="text-sm text-slate-700 dark:text-slate-200"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Tab Content: Sistem -->
-            <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 custom-scrollbar">
-                <div class="space-y-5">
+            <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">URL Google Apps Script (Database API)</label>
-                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-blue-500" readonly>
-                        <p class="text-[10px] text-slate-400 mt-1">Hanya admin server yang dapat mengubah konfigurasi Cloud.</p>
+                        <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">URL Google Apps Script (Database API)</label>
+                        <input type="text" id="setAppUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none" readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-700 mb-2">URL Google Spreadsheet</label>
-                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-blue-500" readonly>
+                        <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">URL Google Spreadsheet</label>
+                        <input type="text" id="setSheetUrl" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none" readonly>
                     </div>
                 </div>
                 
-                <!-- Tombol Reset & Keterangan + Hubungi Pembuat -->
                 <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan ke Bawaan Awal</button>
+                    <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan ke Awal</button>
                     
                     <div class="flex flex-col sm:items-end text-right w-full sm:w-auto">
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-medium">Jika terjadi eror / kendala / permintaan penambahan fitur hubungi:</span>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-medium">Jika terjadi eror / kendala / permintaan penambahan fitur :</span>
                         <a href="https://wa.me/6285867775660?text=Halo%20Kak%20Shodiq,%20saya%20ada%20kendala/pertanyaan%20terkait%20Aplikasi%20Penomoran%20BMN%20BBGTK%20Jabar." target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors inline-flex items-center justify-center">
                             <i class="fab fa-whatsapp text-sm mr-1.5"></i> Hubungi Pembuat (Shodiq BMN)
                         </a>
@@ -546,10 +543,10 @@
             
             html.classList.toggle('dark');
             if (html.classList.contains('dark')) {
-                iconDark.className = "fas fa-sun";
+                if(iconDark) iconDark.className = "fas fa-sun text-[13px] mb-1";
                 showToast("Mode Gelap diaktifkan", "info");
             } else {
-                iconDark.className = "fas fa-moon";
+                if(iconDark) iconDark.className = "fas fa-moon text-[13px] mb-1";
                 showToast("Mode Terang diaktifkan", "info");
             }
         }
@@ -573,38 +570,16 @@
             const badge = document.getElementById('networkBadge');
             
             window.addEventListener('online', () => {
-                badge.className = "ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1 bg-emerald-400 rounded-full animate-pulse"></span> Online';
+                badge.className = "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Online';
                 showToast("Koneksi internet terhubung kembali", "success");
             });
 
             window.addEventListener('offline', () => {
-                badge.className = "ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30";
-                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1 bg-rose-400 rounded-full"></span> Offline';
+                badge.className = "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                badge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 bg-rose-400 rounded-full"></span> Offline';
                 showToast("Perangkat terputus dari internet (Offline)", "error");
             });
-        }
-
-        // Fungsi Toggle Mode Web / Mode HP
-        function toggleAppMode() {
-            const body = document.body;
-            const iconMode = document.getElementById('iconMode');
-            const labelModeText = document.getElementById('labelModeText');
-            const btnToggle = document.getElementById('btnToggleMode');
-
-            body.classList.toggle('mobile-emulator-mode');
-            
-            if (body.classList.contains('mobile-emulator-mode')) {
-                iconMode.className = "fas fa-mobile-alt mr-1.5";
-                labelModeText.innerText = "Mode HP";
-                btnToggle.title = "Ubah ke Mode Web";
-                showToast("Beralih ke Tampilan Simulasi HP", "info");
-            } else {
-                iconMode.className = "fas fa-desktop mr-1.5";
-                labelModeText.innerText = "Mode Web";
-                btnToggle.title = "Ubah ke Mode HP";
-                showToast("Beralih ke Tampilan Standar Web", "info");
-            }
         }
 
         function parseTanggalLokal(tglString) {
@@ -630,13 +605,17 @@
             if (viewName === 'ajuan') {
                 document.getElementById('viewDataAjuan').classList.remove('hidden');
                 document.getElementById('viewRekap').classList.add('hidden');
-                document.getElementById('menuDataAjuan').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
-                document.getElementById('menuRekap').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+                const menuData = document.getElementById('menuDataAjuan');
+                const menuRekap = document.getElementById('menuRekap');
+                if(menuData) menuData.className = "bg-white/10 text-white px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border border-white/25 transition-all cursor-pointer w-20 text-center";
+                if(menuRekap) menuRekap.className = "text-slate-300 hover:text-white hover:bg-white/5 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-20 text-center";
             } else {
                 document.getElementById('viewDataAjuan').classList.add('hidden');
                 document.getElementById('viewRekap').classList.remove('hidden');
-                document.getElementById('menuRekap').className = "bg-white/10 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium border border-white/25 transition-all cursor-pointer";
-                document.getElementById('menuDataAjuan').className = "text-slate-300 hover:text-white hover:bg-white/5 px-3.5 py-1.5 rounded-lg flex items-center text-xs font-medium transition-all cursor-pointer";
+                const menuData = document.getElementById('menuDataAjuan');
+                const menuRekap = document.getElementById('menuRekap');
+                if(menuRekap) menuRekap.className = "bg-white/10 text-white px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border border-white/25 transition-all cursor-pointer w-20 text-center";
+                if(menuData) menuData.className = "text-slate-300 hover:text-white hover:bg-white/5 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-20 text-center";
                 generateRekap();
             }
         }
@@ -657,9 +636,9 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             ['btn-tab-jenis', 'btn-tab-pic', 'btn-tab-sistem'].forEach(id => {
-                document.getElementById(id).className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 dark:hover:text-slate-200 transition-colors";
+                document.getElementById(id).className = "px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 transition-colors";
             });
-            document.getElementById('btn-' + tabId).className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors";
+            document.getElementById('btn-' + tabId).className = "px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors";
         }
 
         function renderSettingTables() {
@@ -714,9 +693,6 @@
             document.getElementById('boxFormJenis').className = "mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700/50 rounded-xl p-4 transition-all";
             document.getElementById('titleFormJenis').className = "text-sm font-bold text-amber-800 dark:text-amber-300 mb-2";
             document.getElementById('titleFormJenis').innerText = "Edit Jenis Formulir & Template";
-
-            document.getElementById('setJenisNama').focus(); 
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
 
         function simpanEditJenis() {
@@ -796,31 +772,42 @@
 
             if (syncToCloud) {
                 const indicator = document.getElementById('syncIndicator');
-                indicator.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan ke Cloud...';
-                indicator.className = "ml-3 text-[10px] font-normal bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded-full inline-block";
+                if(indicator) {
+                    indicator.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
+                    indicator.className = "text-[10px] font-normal bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded-full inline-block";
+                }
                 
                 const payload = { action: "simpan_pengaturan", pics: listPics, jenis: listJenis };
                 try {
                     const response = await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify(payload) });
                     const res = await response.json();
                     if(res.status === "success") {
-                        indicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Tersinkronisasi';
-                        indicator.className = "ml-3 text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full inline-block";
-                        setTimeout(() => indicator.classList.add('hidden'), 3000);
+                        if(indicator) {
+                            indicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Tersinkronisasi';
+                            indicator.className = "text-[10px] font-normal bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-0.5 rounded-full inline-block";
+                            setTimeout(() => indicator.classList.add('hidden'), 3000);
+                        }
                     }
                 } catch (e) {
-                    indicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal Simpan';
-                    indicator.className = "ml-3 text-[10px] font-normal bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 px-2 py-0.5 rounded-full inline-block";
+                    if(indicator) {
+                        indicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal Simpan';
+                        indicator.className = "text-[10px] font-normal bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 px-2 py-0.5 rounded-full inline-block";
+                    }
                     console.error("Gagal sync pengaturan", e);
                 }
             }
         }
 
         function renderDropdownsDinamis() {
-            document.getElementById('filterPIC').innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            document.getElementById('inputPicBmn').innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            document.getElementById('filterJenis').innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
-            document.getElementById('inputJenisFormulir').innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            const filterPicEl = document.getElementById('filterPIC');
+            const inputPicEl = document.getElementById('inputPicBmn');
+            const filterJenisEl = document.getElementById('filterJenis');
+            const inputJenisEl = document.getElementById('inputJenisFormulir');
+
+            if(filterPicEl) filterPicEl.innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
+            if(inputPicEl) inputPicEl.innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
+            if(filterJenisEl) filterJenisEl.innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            if(inputJenisEl) inputJenisEl.innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
         }
 
         async function loadDataDariCloud() {
@@ -845,7 +832,7 @@
                     tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
                     renderPagination();
                 } else {
-                    globalDataList = [...result.data].reverse(); // Urutkan terbaru di atas
+                    globalDataList = [...result.data].reverse();
                     filteredDataList = [...globalDataList];
                     currentPage = 1;
                     renderTablePage();
@@ -943,10 +930,8 @@
 
             let buttonsHtml = '';
             
-            // Tombol Prev
             buttonsHtml += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded text-xs cursor-not-allowed"' : 'class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700"'}>Prev</button>`;
 
-            // Nomor Halaman
             for (let i = 1; i <= totalPages; i++) {
                 if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                     if (i === currentPage) {
@@ -959,7 +944,6 @@
                 }
             }
 
-            // Tombol Next
             buttonsHtml += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded text-xs cursor-not-allowed"' : 'class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700"'}>Next</button>`;
 
             document.getElementById('paginationButtons').innerHTML = buttonsHtml;
@@ -971,7 +955,6 @@
             currentPage = page;
             renderTablePage();
             
-            // Scroll ke bagian atas kontainer tabel agar nyaman dilihat
             const container = document.querySelector('.freeze-table-container');
             if(container) container.scrollTop = 0;
         }
@@ -1087,7 +1070,6 @@
             globalDataList.forEach(item => {
                 const j = item.jenis || 'Lainnya';
                 jenisMap[j] = (jenisMap[j] || 0) + 1;
-                
                 const p = item.pic || 'Tidak Diketahui';
                 picMap[p] = (picMap[p] || 0) + 1;
             });
@@ -1096,20 +1078,40 @@
             document.getElementById('rekapTotalPIC').innerText = Object.keys(picMap).length;
 
             const sortedJenis = Object.entries(jenisMap).sort((a,b) => b[1] - a[1]);
-            document.getElementById('listRekapJenis').innerHTML = sortedJenis.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedJenis.map(([nama, count]) => `
-                <div class="flex justify-between items-center px-3 py-2 border-b dark:border-slate-700 text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <span class="font-medium text-slate-700 dark:text-slate-300 truncate pr-2">${nama}</span>
-                    <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
-                </div>
-            `).join('');
+            const maxJenis = sortedJenis.length > 0 ? sortedJenis[0][1] : 1;
+            
+            document.getElementById('listRekapJenis').innerHTML = sortedJenis.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedJenis.map(([nama, count]) => {
+                const percentage = (count / maxJenis) * 100;
+                return `
+                    <div class="group relative px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                        <div class="flex justify-between items-center mb-1.5 z-10 relative">
+                            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate pr-4">${nama}</span>
+                            <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-0.5 rounded text-[11px]">${count}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-blue-500 h-full rounded-full transition-all duration-700" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             const sortedPic = Object.entries(picMap).sort((a,b) => b[1] - a[1]);
-            document.getElementById('listRekapPIC').innerHTML = sortedPic.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedPic.map(([nama, count]) => `
-                <div class="flex justify-between items-center px-3 py-2 border-b dark:border-slate-700 text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <span class="font-medium text-slate-700 dark:text-slate-300 truncate pr-2">${nama}</span>
-                    <span class="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full">${count} surat</span>
-                </div>
-            `).join('');
+            const maxPic = sortedPic.length > 0 ? sortedPic[0][1] : 1;
+            
+            document.getElementById('listRekapPIC').innerHTML = sortedPic.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedPic.map(([nama, count]) => {
+                const percentage = (count / maxPic) * 100;
+                return `
+                    <div class="group relative px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                        <div class="flex justify-between items-center mb-1.5 z-10 relative">
+                            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate pr-4">${nama}</span>
+                            <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold px-2.5 py-0.5 rounded text-[11px]">${count}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-purple-500 h-full rounded-full transition-all duration-700" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function openModalSpreadsheet() {
