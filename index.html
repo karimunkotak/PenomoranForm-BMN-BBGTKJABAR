@@ -23,24 +23,66 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
-        /* Background Utama dengan Gradient Profesional */
         body { 
             font-family: 'Inter', sans-serif; 
             transition: background-color 0.3s ease, color 0.3s ease;
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
+            background: #f8fafc;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ANIMATED BACKGROUND BLUEPRINT & WAVES */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 25s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        .wave-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .dark .animated-bg {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        .dark body { 
+            background: #0f172a; 
         }
         
-        /* Container Utama dengan Efek Kaca (Glassmorphism) yang Responsif Otomatis */
         #appWrapper {
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
             border-radius: 16px;
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
             margin: 16px auto;
             max-width: 96%;
             padding-bottom: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -51,7 +93,6 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Toast Notification Animation */
         #toastContainer {
             position: fixed;
             bottom: 24px;
@@ -72,7 +113,6 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* Freeze / Sticky Table Header */
         .freeze-table-container {
             max-height: 65vh;
             overflow-y: auto;
@@ -91,24 +131,28 @@
             padding: 16px 12px !important;
         }
 
-        /* Dark Mode Override */
-        .dark body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-        .dark #appWrapper { background-color: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .dark #appWrapper { background-color: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); }
         .dark .freeze-table-container thead th { background-color: #1e3264 !important; box-shadow: inset 0 -2px 0 #334155; }
     </style>
 </head>
 <body class="text-slate-800 dark:text-slate-100 pb-10">
 
-    <!-- Container Toast Notification Mengambang -->
+    <!-- Background Animasi Bergerak & Gelombang Dotted -->
+    <div class="animated-bg"></div>
+    <div class="wave-container">
+        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,100 C300,180 700,20 1440,120 L1440,900 L0,900 Z" fill="none" stroke="rgba(59, 130, 246, 0.15)" stroke-width="2" stroke-dasharray="6,6"/>
+            <path d="M0,300 C400,100 1000,400 1440,250" fill="none" stroke="rgba(147, 51, 234, 0.12)" stroke-width="1.5" stroke-dasharray="4,8"/>
+        </svg>
+    </div>
+
     <div id="toastContainer"></div>
 
-    <!-- Wrapper Utama Aplikasi -->
     <div id="appWrapper" class="transition-all duration-300">
 
         <!-- Navigation Bar -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
             <nav class="bg-[#1e3264] dark:bg-slate-800 text-white rounded-xl flex items-center justify-between px-4 sm:px-6 py-3.5 shadow-md border border-slate-700/30">
-                <!-- Title Section -->
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-file-alt text-blue-400 text-2xl sm:text-3xl"></i>
                     <div class="flex flex-col leading-tight">
@@ -122,7 +166,6 @@
                     </div>
                 </div>
 
-                <!-- Menu Items (Desktop & Tablet) -->
                 <div class="hidden md:flex items-center space-x-1.5">
                     <a href="#" id="menuDataAjuan" onclick="switchView('ajuan')" class="bg-white/10 text-white px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border border-white/25 transition-all cursor-pointer w-20 text-center">
                         <i class="fas fa-table-cells-large mb-1 text-[13px]"></i> Data Ajuan
@@ -136,12 +179,10 @@
                     
                     <div class="w-px bg-white/20 mx-1.5 h-8"></div>
                     
-                    <!-- Tombol Toggle Dark/Light Mode -->
                     <button onclick="toggleDarkMode()" id="btnToggleDark" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 flex flex-col items-center justify-center rounded-lg text-[10px] font-bold transition-all cursor-pointer w-14 text-center" title="Ganti Tema">
                         <i class="fas fa-moon mb-1 text-[13px]" id="iconDark"></i> Tema
                     </button>
 
-                    <!-- Tombol Setting -->
                     <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-16 text-center" title="Pengaturan Sistem">
                         <i class="fas fa-cog mb-1 text-[13px]"></i> Pengaturan
                     </a>
@@ -179,7 +220,6 @@
                 </div>
             </div>
 
-            <!-- Container Tabel dengan Freeze Header & Pagination -->
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="freeze-table-container custom-scrollbar">
                     <table class="w-full text-left border-collapse table-auto">
@@ -220,7 +260,6 @@
                     </table>
                 </div>
 
-                <!-- Footer Pagination -->
                 <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div id="paginationInfo" class="text-xs text-slate-500 dark:text-slate-400">Menampilkan 0 dari 0 data</div>
                     <div id="paginationButtons" class="flex items-center space-x-1"></div>
@@ -272,9 +311,9 @@
             </div>
         </main>
 
-    </div> <!-- End of appWrapper -->
+    </div>
 
-    <!-- ================= MODAL OFFLINE POCONG GAME (EASTER EGG) ================= -->
+    <!-- ================= MODAL OFFLINE POCONG GAME ================= -->
     <div id="modalOfflineGame" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-[999] flex items-center justify-center px-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden p-6 text-white flex flex-col items-center">
             <div class="w-full flex justify-between items-center mb-4">
@@ -287,7 +326,6 @@
             
             <p class="text-xs text-slate-400 mb-3 text-center">Sambil menunggu internet terhubung kembali, bantu Si Pocong melompati nisan kuburan!</p>
             
-            <!-- Canvas Game Pocong Runner -->
             <div class="relative w-full bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-inner flex flex-col items-center justify-center">
                 <canvas id="dinoCanvas" width="500" height="160" class="w-full max-w-[500px] h-[160px] cursor-pointer"></canvas>
                 <div id="gameOverlayText" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-center p-4">
@@ -305,7 +343,7 @@
 
     <!-- ================= MODAL TAMBAH/EDIT AJUAN ================= -->
     <div id="modalOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-6 sm:p-7 space-y-4 transform transition-all border border-slate-700/20" id="modalContent">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden p-6 sm:p-7 space-y-4 transform transition-all border border-slate-700/20 max-h-[90vh] overflow-y-auto custom-scrollbar" id="modalContent">
             <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-700">
                 <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-[#1e3264] dark:text-blue-400">Tambah Ajuan Penomoran</h2>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 h-8 w-8 rounded-full flex items-center justify-center transition-colors">
@@ -314,6 +352,27 @@
             </div>
             <input type="hidden" id="inputRowIndex" value="">
             
+            <!-- Pilihan Kategori Ajuan -->
+            <div>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kategori Sumber Ajuan</label>
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
+                    <button type="button" id="btnKatPegawai" onclick="gantiKategoriAjuan('pegawai')" class="py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all flex items-center justify-center opacity-75 cursor-not-allowed">
+                        <i class="fas fa-user-friends mr-1.5"></i> Ajuan dari Pegawai (Segera)
+                    </button>
+                    <button type="button" id="btnKatBmn" onclick="gantiKategoriAjuan('bmn')" class="py-2.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow-xs transition-all flex items-center justify-center">
+                        <i class="fas fa-user-shield mr-1.5"></i> Tim BMN Internal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Field Nama Pemohon / Katim / Kaur / PJ / Panitia / Penerima -->
+            <div>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Katim / Kaur / PJ / Panitia / Penerima</label>
+                <select id="inputNamaPegawai" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="">-- Pilih Katim / Kaur / PJ / Panitia / Penerima --</option>
+                </select>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN</label>
@@ -376,19 +435,17 @@
                 </button>
             </div>
 
-            <!-- Tab Navigasi Disusun Flex Wrap -->
             <div class="flex flex-wrap items-center px-4 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 gap-2">
                 <button onclick="openSettingTab('tab-jenis')" id="btn-tab-jenis" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition-colors">Jenis Formulir</button>
                 <button onclick="openSettingTab('tab-pic')" id="btn-tab-pic" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 transition-colors">Daftar PIC BMN</button>
                 <button onclick="openSettingTab('tab-sistem')" id="btn-tab-sistem" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-400 transition-colors">Koneksi Sistem</button>
             </div>
 
-            <!-- Tab Content: Jenis Formulir -->
             <div id="tab-jenis" class="tab-content active flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div id="boxFormJenis" class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 transition-all">
                     <h3 id="titleFormJenis" class="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">Tambah Jenis Formulir & Template</h3>
                     <div class="flex flex-col gap-3">
-                        <input type="text" id="setJenisNama" placeholder="Nama Formulir (Contoh: F1 Ajuan Inventaris)..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="setJenisNama" placeholder="Nama Formulir..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <input type="text" id="setJenisFormat" placeholder="Format Nomor..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <input type="text" id="setJenisUrl" placeholder="URL template Word (.docx)..." class="border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm font-mono text-xs focus:outline-none focus:border-blue-500">
                         
@@ -414,7 +471,6 @@
                 </div>
             </div>
 
-            <!-- Tab Content: PIC BMN -->
             <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-end">
                     <div class="flex-1 w-full">
@@ -437,7 +493,6 @@
                 </div>
             </div>
 
-            <!-- Tab Content: Sistem -->
             <div id="tab-sistem" class="tab-content flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div class="space-y-4">
                     <div>
@@ -466,7 +521,6 @@
 
     <!-- Scripts -->
     <script>
-        const PIN_ADMIN = "123456";
         const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxVEwnprKvGUYFUOVOAjkHx6LOEMX8sIO9GVHOrAKWNrOp1Oio05xfr7u6bKXfg-10T/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
@@ -506,7 +560,10 @@
         let curSheetUrl = DEFAULT_URL_SHEET;
         let listPics = [...DEFAULT_PICS];
         let listJenis = [...DEFAULT_JENIS];
-        let editingJenisIdx = -1; 
+        let listPegawaiGlobal = [];
+        let editingJenisIdx = -1;
+        
+        let currentKategoriAjuan = 'bmn';
         
         let currentPage = 1;
         const rowsPerPage = 20;
@@ -519,7 +576,6 @@
             initPocongGame();
         });
 
-        // TOAST NOTIFICATION MODERN
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -541,7 +597,39 @@
             }, 3500);
         }
 
-        // EKSPOR LAPORAN KE EXCEL (.XLSX)
+        function gantiKategoriAjuan(kat) {
+            const btnPegawai = document.getElementById('btnKatPegawai');
+            const btnBmn = document.getElementById('btnKatBmn');
+
+            if (kat === 'pegawai') {
+                showToast("Fitur 'Ajuan dari Pegawai' masih Prototype (Belum bisa diakses/disimpan).", "info");
+                currentKategoriAjuan = 'bmn';
+            } else {
+                currentKategoriAjuan = 'bmn';
+            }
+            
+            if(btnBmn && btnPegawai) {
+                btnBmn.className = "py-2.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow-xs transition-all flex items-center justify-center";
+                btnPegawai.className = "py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all flex items-center justify-center opacity-75 cursor-not-allowed";
+            }
+            renderDropdownJenisModal();
+        }
+
+        function renderDropdownJenisModal() {
+            const inputJenisEl = document.getElementById('inputJenisFormulir');
+            if (!inputJenisEl) return;
+
+            let opsiList = [...listJenis];
+            inputJenisEl.innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + opsiList.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+        }
+        
+        function renderDropdownPegawai() {
+            const selectEl = document.getElementById('inputNamaPegawai');
+            if (!selectEl) return;
+            selectEl.innerHTML = '<option value="">-- Pilih Katim / Kaur / PJ / Panitia / Penerima --</option>' + 
+                listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+        }
+
         function exportDataExcel() {
             if (!globalDataList || globalDataList.length === 0) {
                 showToast("Tidak ada data untuk diekspor!", "error");
@@ -550,6 +638,9 @@
             
             const exportRows = globalDataList.map((item, idx) => ({
                 "No": idx + 1,
+                "Kategori": "Tim BMN Internal",
+                "Katim/Kaur/PJ/Panitia/Penerima": item.namaPegawai || '-',
+                "NIP": item.nipPegawai || '-',
                 "Nomor Surat": item.nomorSurat || '-',
                 "Pekerjaan / Keterangan": item.pekerjaan || '-',
                 "Tempat / Tujuan": item.tempat || '-',
@@ -566,7 +657,6 @@
             showToast("Laporan Excel berhasil diunduh!", "success");
         }
 
-        // DARK MODE & LIGHT MODE TOGGLE
         function toggleDarkMode() {
             const html = document.documentElement;
             const iconDark = document.getElementById('iconDark');
@@ -581,7 +671,6 @@
             }
         }
 
-        // GLOBAL KEYBOARD SHORTCUTS
         function initKeyboardShortcuts() {
             document.addEventListener('keydown', (e) => {
                 if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -595,7 +684,6 @@
             });
         }
 
-        // INDIKATOR STATUS KONEKSI REAL-TIME & OFFLINE GAME TRIGGER
         function initNetworkListener() {
             const badge = document.getElementById('networkBadge');
             
@@ -614,7 +702,6 @@
             });
         }
 
-        // ================= LOGIC MINI POCONG GAME =================
         let gameInterval = null;
         let gameRunning = false;
         let score = 0;
@@ -681,7 +768,6 @@
         }
 
         function updatePocongGame() {
-            // Gravitasi & Lompat Pocong
             pocong.y += pocong.vy;
             pocong.vy += pocong.gravity;
             if (pocong.y >= 104) {
@@ -690,16 +776,13 @@
                 pocong.grounded = true;
             }
 
-            // Spawn rintangan (Batu Nisan Kuburan)
             if (Math.random() < 0.022 && (obstacles.length === 0 || obstacles[obstacles.length - 1].x < 340)) {
                 obstacles.push({ x: 500, y: 114, width: 16, height: 22 });
             }
 
-            // Gerakkan rintangan
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 obstacles[i].x -= gameSpeed;
                 
-                // Deteksi Tabrakan
                 if (
                     pocong.x < obstacles[i].x + obstacles[i].width &&
                     pocong.x + pocong.width > obstacles[i].x &&
@@ -716,7 +799,6 @@
                     `;
                 }
 
-                // Hapus rintangan lewat
                 if (obstacles[i].x + obstacles[i].width < 0) {
                     obstacles.splice(i, 1);
                     score += 10;
@@ -733,11 +815,9 @@
             if(!canvas) return;
             const ctx = canvas.getContext('2d');
 
-            // Latar Belakang Malam
             ctx.fillStyle = '#020617';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Garis Tanah Kuburan
             ctx.strokeStyle = '#334155';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -745,27 +825,20 @@
             ctx.lineTo(500, 136);
             ctx.stroke();
 
-            // Gambar Karakter Pocong Mini (Warna Putih Kain Kafan)
             ctx.fillStyle = '#f8fafc';
-            // Badan pocong
             ctx.fillRect(pocong.x, pocong.y + 6, pocong.width, pocong.height - 6);
-            // Kepala pocong (bulat berbalut kain)
             ctx.fillRect(pocong.x + 2, pocong.y, 14, 12);
-            // Mata hitam pocong
             ctx.fillStyle = '#020617';
             ctx.fillRect(pocong.x + 5, pocong.y + 4, 3, 3);
             ctx.fillRect(pocong.x + 11, pocong.y + 4, 3, 3);
 
-            // Gambar Rintangan (Batu Nisan Kuburan Berwarna Abu-abu)
             ctx.fillStyle = '#94a3b8';
             obstacles.forEach(obs => {
-                // Bentuk nisan batu sederhana
                 ctx.beginPath();
                 ctx.roundRect(obs.x, obs.y, obs.width, obs.height, [6, 6, 0, 0]);
                 ctx.fill();
             });
 
-            // Tampilkan Skor di Canvas
             ctx.fillStyle = '#cbd5e1';
             ctx.font = '11px monospace';
             ctx.fillText(`HI ${String(Math.floor(hiScore)).padStart(5, '0')}  ${String(Math.floor(score)).padStart(5, '0')}`, 330, 25);
@@ -991,12 +1064,12 @@
             const filterPicEl = document.getElementById('filterPIC');
             const inputPicEl = document.getElementById('inputPicBmn');
             const filterJenisEl = document.getElementById('filterJenis');
-            const inputJenisEl = document.getElementById('inputJenisFormulir');
 
             if(filterPicEl) filterPicEl.innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
             if(inputPicEl) inputPicEl.innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
             if(filterJenisEl) filterJenisEl.innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
-            if(inputJenisEl) inputJenisEl.innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            
+            renderDropdownJenisModal();
         }
 
         async function loadDataDariCloud() {
@@ -1013,6 +1086,10 @@
                 
                 if (result.pics && Array.isArray(result.pics) && result.pics.length > 0) listPics = result.pics;
                 if (result.jenis && Array.isArray(result.jenis) && result.jenis.length > 0) listJenis = result.jenis;
+                if (result.pegawai && Array.isArray(result.pegawai)) {
+                    listPegawaiGlobal = result.pegawai;
+                    renderDropdownPegawai();
+                }
                 saveSettingsAndUpdate(false);
 
                 if(!result.data || result.data.length === 0) {
@@ -1075,16 +1152,28 @@
                 formatTgl = String(data.tanggal);
             }
 
+            const namaDisplay = data.namaPegawai || 'Internal';
+            const badgeKategori = `<div class="mb-1.5">
+                <div class="inline-block w-fit max-w-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-2.5 py-1 rounded-lg text-[11px] leading-relaxed shadow-sm">
+                    <i class="fas fa-user-tag mr-1 text-purple-500"></i><span class="font-medium opacity-80">Katim/Kaur/PJ/Panitia/Penerima:</span> <strong class="font-extrabold ml-0.5 whitespace-normal">${namaDisplay}</strong>
+                </div>
+            </div>`;
+
             const tr = document.createElement('tr');
             tr.className = "border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition-colors";
             tr.dataset.jenis = data.jenis || '';
             tr.dataset.pic = data.pic || '';
             tr.dataset.pekerjaan = data.pekerjaan || '';
             tr.dataset.tempat = data.tempat || '';
+            tr.dataset.namaPegawai = data.namaPegawai || '';
+            tr.dataset.nipPegawai = data.nipPegawai || ''; 
 
             tr.innerHTML = `
                 <td class="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400">${data.no || '-'}</td>
-                <td class="px-4 py-2.5"><div class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">${data.pekerjaan || '-'}</div></td>
+                <td class="px-4 py-2.5">
+                    ${badgeKategori}
+                    <div class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">${data.pekerjaan || '-'}</div>
+                </td>
                 <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">${data.tempat || '-'}</td>
                 <td class="px-4 py-2.5 text-center">
                     <span class="inline-block bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
@@ -1120,7 +1209,6 @@
             document.getElementById('paginationInfo').innerText = `Menampilkan ${startData} - ${endData} dari ${totalRows} data`;
 
             let buttonsHtml = '';
-            
             buttonsHtml += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded text-xs cursor-not-allowed"' : 'class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700"'}>Prev</button>`;
 
             for (let i = 1; i <= totalPages; i++) {
@@ -1153,12 +1241,14 @@
         async function downloadDraft(button) {
             const tr = button.closest('tr');
             const no = tr.querySelector('td:nth-child(1)')?.innerText.trim() || '';
-            const pekerjaan = tr.dataset.pekerjaan || tr.querySelector('td:nth-child(2)')?.innerText.trim() || '';
-            const tempat = tr.dataset.tempat || tr.querySelector('td:nth-child(3)')?.innerText.trim() || '';
+            const pekerjaan = tr.dataset.pekerjaan || '';
+            const tempat = tr.dataset.tempat || '';
             const jenis = tr.dataset.jenis || '';
             const nomorSurat = tr.querySelector('td:nth-child(4) .flex span')?.innerText.trim() || '';
-            const pic = tr.dataset.pic || tr.querySelector('td:nth-child(5)')?.innerText.trim() || '';
+            const pic = tr.dataset.pic || '';
             const tanggal = tr.querySelector('td:nth-child(6) div:nth-child(2)')?.innerText.trim() || '';
+            const namaPegawai = tr.dataset.namaPegawai || '';
+            const nipPegawai = tr.dataset.nipPegawai || ''; 
 
             const template = listJenis.find(item => item.nama === jenis);
 
@@ -1179,28 +1269,19 @@
             showToast("Sedang memproses dokumen Word...", "info");
 
             try {
-                if (typeof PizZip === 'undefined' && typeof window.PizZip === 'undefined') {
-                    throw new Error("Library PizZip gagal dimuat oleh browser.");
-                }
                 const ZipLib = window.PizZip || PizZip;
                 const DocLib = window.docxtemplater || docxtemplater;
 
                 const fetchUrl = template.templateUrl + (template.templateUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
                 const response = await fetch(fetchUrl);
 
-                if (!response.ok) {
-                    throw new Error(`Template gagal diambil dari server (${response.status})`);
-                }
+                if (!response.ok) throw new Error(`Template gagal diambil dari server (${response.status})`);
 
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = new ZipLib(arrayBuffer);
-                const doc = new DocLib(zip, {
-                    paragraphLoop: true,
-                    linebreaks: true,
-                    delimiters: { start: '{{', end: '}}' }
-                });
+                const doc = new DocLib(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
 
-                doc.render({ nomorSurat, pekerjaan, tempat, tanggal, pic, no, jenis });
+                doc.render({ nomorSurat, pekerjaan, tempat, tanggal, pic, no, jenis, namaPegawai, nipPegawai });
 
                 const output = doc.getZip().generate({
                     type: 'blob',
@@ -1317,8 +1398,12 @@
         function openModalTambah() {
             document.getElementById('modalTitle').innerText = "Tambah Ajuan Penomoran";
             document.getElementById('inputRowIndex').value = "";
+            gantiKategoriAjuan('bmn'); 
+            
+            const selectPegawai = document.getElementById('inputNamaPegawai');
+            if(selectPegawai) selectPegawai.value = "";
+            
             document.getElementById('inputPicBmn').value = "";
-            document.getElementById('inputJenisFormulir').value = "";
             document.getElementById('inputPekerjaan').value = "";
             document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
             document.getElementById('inputTempat').value = "";
@@ -1331,6 +1416,12 @@
             
             document.getElementById('modalTitle').innerText = "Edit Ajuan Penomoran";
             document.getElementById('inputRowIndex').value = data.rowIndex;
+            
+            gantiKategoriAjuan(data.kategori || 'bmn');
+            
+            const selectPegawai = document.getElementById('inputNamaPegawai');
+            if(selectPegawai) selectPegawai.value = data.namaPegawai || "";
+            
             document.getElementById('inputPicBmn').value = data.pic || "";
             document.getElementById('inputJenisFormulir').value = data.jenis || "";
             document.getElementById('inputPekerjaan').value = data.pekerjaan || "";
@@ -1356,6 +1447,17 @@
 
         async function simpanDataCloud() {
             const rowIndex = document.getElementById('inputRowIndex').value;
+            const kategori = currentKategoriAjuan;
+            
+            const selectPegawai = document.getElementById('inputNamaPegawai');
+            const namaPegawai = selectPegawai ? selectPegawai.value : "";
+            
+            let nipPegawai = "";
+            if (namaPegawai) {
+                const peg = listPegawaiGlobal.find(p => p.nama === namaPegawai);
+                if (peg) nipPegawai = peg.nip;
+            }
+
             const pic = document.getElementById('inputPicBmn').value;
             const jenis = document.getElementById('inputJenisFormulir').value;
             const pekerjaan = document.getElementById('inputPekerjaan').value.trim();
@@ -1367,6 +1469,11 @@
                 return;
             }
 
+            if(!namaPegawai) {
+                showToast("Katim/Kaur/PJ/Panitia/Penerima wajib dipilih!", "error");
+                return;
+            }
+
             const btnSimpan = document.getElementById('btnSimpan');
             btnSimpan.disabled = true;
             btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
@@ -1375,7 +1482,14 @@
             const payload = {
                 action: rowIndex === "" ? "tambah" : "edit",
                 rowIndex: rowIndex === "" ? undefined : Number(rowIndex),
-                pic, jenis, pekerjaan, tanggal, tempat
+                kategori: kategori,
+                namaPegawai: namaPegawai,
+                nipPegawai: nipPegawai,
+                pic: pic,
+                jenis: jenis,
+                pekerjaan: pekerjaan,
+                tanggal: tanggal,
+                tempat: tempat
             };
 
             try {
@@ -1410,7 +1524,7 @@
                 });
                 const res = await response.json();
                 if(res.status === "success" || res.result === "success") {
-                    showToast("Data berhasil disetujui/dihapus!", "success");
+                    showToast("Data berhasil dihapus!", "success");
                     loadDataDariCloud();
                 } else {
                     showToast("Gagal menghapus: " + (res.message || "Unknown error"), "error");
