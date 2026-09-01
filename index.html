@@ -36,7 +36,6 @@
             overflow-x: hidden;
         }
 
-        /* GRID BLUEPRINT DITEGASKAN KONTRASNYA */
         .animated-bg {
             position: fixed;
             top: 0;
@@ -141,7 +140,6 @@
 </head>
 <body class="text-slate-800 dark:text-slate-100 pb-10">
 
-    <!-- Background Animasi Grid Sangat Jelas -->
     <div class="animated-bg"></div>
     <div class="wave-container">
         <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -478,10 +476,15 @@
             <div id="tab-pic" class="tab-content flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 custom-scrollbar">
                 <div class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-end">
                     <div class="flex-1 w-full">
-                        <label class="block text-xs font-bold text-purple-800 dark:text-purple-300 mb-1">Tambah Nama PIC Baru</label>
-                        <input type="text" id="setPicNama" placeholder="Ketik nama lengkap petugas..." class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                        <label class="block text-xs font-bold text-purple-800 dark:text-purple-300 mb-1">Tambah Nama PIC Baru (Dari Data Pegawai)</label>
+                        <select id="setPicNama" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 bg-white">
+                            <option value="">-- Pilih dari Data Pegawai --</option>
+                        </select>
                     </div>
-                    <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap w-full sm:w-auto"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="sinkronkanNamaPicOtomatis()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap flex-1 sm:flex-none" title="Perbarui nama PIC agar sesuai dengan gelar terbaru di data Pegawai"><i class="fas fa-sync-alt mr-1"></i> Sinkronkan Nama</button>
+                        <button onclick="tambahSettingPic()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap flex-1 sm:flex-none"><i class="fas fa-plus mr-1"></i> Tambah PIC</button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden min-w-[400px]">
@@ -528,7 +531,7 @@
         const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxVEwnprKvGUYFUOVOAjkHx6LOEMX8sIO9GVHOrAKWNrOp1Oio05xfr7u6bKXfg-10T/exec";
         const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
         
-        const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supri", "Dikdik Hermawan"];
+        const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supriatna", "Dikdik Hermawan"];
         
         const DEFAULT_JENIS = [
             { nama: "F1 Ajuan Inventaris", format: "F1/INV/{romawi}/BMN/{thn}", templateUrl: "https://karimunkotak.github.io/PenomoranForm-BMN-BBGTKJABAR/templates/F01.docx" },
@@ -629,9 +632,16 @@
         
         function renderDropdownPegawai() {
             const selectEl = document.getElementById('inputNamaPegawai');
-            if (!selectEl) return;
-            selectEl.innerHTML = '<option value="">-- Pilih Katim / Kaur / PJ / Panitia / Penerima --</option>' + 
-                listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+            if (selectEl) {
+                selectEl.innerHTML = '<option value="">-- Pilih Katim / Kaur / PJ / Panitia / Penerima --</option>' + 
+                    listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+            }
+            
+            const selectSetPic = document.getElementById('setPicNama');
+            if (selectSetPic) {
+                selectSetPic.innerHTML = '<option value="">-- Pilih dari Data Pegawai --</option>' + 
+                    listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+            }
         }
 
         function exportDataExcel() {
@@ -925,8 +935,7 @@
                     <td class="px-4 py-2 text-center text-slate-400">${idx + 1}</td>
                     <td class="px-4 py-2 font-medium">${p}</td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
-                        <button onclick="editSettingPic(${idx})" class="text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/40 p-1.5 rounded mr-1"><i class="fas fa-pen"></i></button>
-                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                        <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1000,19 +1009,49 @@
 
         function tambahSettingPic() {
             const nama = document.getElementById('setPicNama').value.trim();
-            if(!nama) { showToast("Nama PIC harus diisi!", "error"); return; }
+            if(!nama) { showToast("Silakan pilih nama pegawai terlebih dahulu!", "error"); return; }
+            if(listPics.includes(nama)) { showToast("Pegawai ini sudah terdaftar sebagai PIC!", "error"); return; }
+            
             listPics.push(nama);
             saveSettingsAndUpdate(true);
             document.getElementById('setPicNama').value = '';
             showToast("PIC baru ditambahkan", "success");
         }
 
-        function editSettingPic(idx) {
-            const namaBaru = prompt("Ubah Nama PIC:", listPics[idx]);
-            if (namaBaru !== null && namaBaru.trim() !== "") {
-                listPics[idx] = namaBaru.trim();
+        function sinkronkanNamaPicOtomatis() {
+            if (!listPegawaiGlobal || listPegawaiGlobal.length === 0) {
+                showToast("Data pegawai kosong atau belum dimuat!", "error");
+                return;
+            }
+
+            let updatedCount = 0;
+            
+            listPics = listPics.map(picTerdaftar => {
+                const kataPertamaPic = picTerdaftar.trim().split(" ")[0].toLowerCase();
+                const kataKeduaPic = (picTerdaftar.trim().split(" ")[1] || "").toLowerCase();
+                
+                const matchPegawai = listPegawaiGlobal.find(peg => {
+                    const kataPertamaPeg = peg.nama.trim().split(" ")[0].toLowerCase();
+                    const kataKeduaPeg = (peg.nama.trim().split(" ")[1] || "").toLowerCase();
+                    
+                    if (kataPertamaPic === 'asep') {
+                        return kataPertamaPeg === 'asep' && kataKeduaPeg === kataKeduaPic;
+                    }
+                    return kataPertamaPeg === kataPertamaPic;
+                });
+
+                if (matchPegawai && matchPegawai.nama !== picTerdaftar) {
+                    updatedCount++;
+                    return matchPegawai.nama; 
+                }
+                return picTerdaftar;
+            });
+
+            if (updatedCount > 0) {
                 saveSettingsAndUpdate(true);
-                showToast("Nama PIC diperbarui", "success");
+                showToast(`Berhasil menyinkronkan ${updatedCount} nama PIC dengan gelar terbaru!`, "success");
+            } else {
+                showToast("Semua nama PIC sudah menggunakan data terbaru.", "info");
             }
         }
 
@@ -1285,7 +1324,28 @@
                 const zip = new ZipLib(arrayBuffer);
                 const doc = new DocLib(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: '{{', end: '}}' } });
 
-                doc.render({ nomorSurat, pekerjaan, tempat, tanggal, pic, no, jenis, namaPegawai, nipPegawai });
+                let nipPicValue = "-";
+                if (pic) {
+                    const dataPic = listPegawaiGlobal.find(p => p.nama === pic);
+                    if (dataPic && dataPic.nip) {
+                        nipPicValue = dataPic.nip;
+                    }
+                }
+
+                doc.render({ 
+                    nomorSurat: nomorSurat, 
+                    pekerjaan: pekerjaan, 
+                    tempat: tempat, 
+                    tanggal: tanggal, 
+                    
+                    pic: pic,          
+                    nipPic: nipPicValue, 
+                    
+                    no: no, 
+                    jenis: jenis, 
+                    namaPegawai: namaPegawai,  
+                    nipPegawai: nipPegawai     
+                });
 
                 const output = doc.getZip().generate({
                     type: 'blob',
@@ -1346,8 +1406,30 @@
             globalDataList.forEach(item => {
                 const j = item.jenis || 'Lainnya';
                 jenisMap[j] = (jenisMap[j] || 0) + 1;
-                const p = item.pic || 'Tidak Diketahui';
-                picMap[p] = (picMap[p] || 0) + 1;
+                
+                let rawPic = item.pic || 'Tidak Diketahui';
+                let matchedPicName = rawPic;
+                
+                if (rawPic !== 'Tidak Diketahui' && listPegawaiGlobal && listPegawaiGlobal.length > 0) {
+                    const kataPertamaRaw = rawPic.trim().split(" ")[0].toLowerCase();
+                    const kataKeduaRaw = (rawPic.trim().split(" ")[1] || "").toLowerCase();
+
+                    const foundPeg = listPegawaiGlobal.find(peg => {
+                        const kataPertamaPeg = peg.nama.trim().split(" ")[0].toLowerCase();
+                        const kataKeduaPeg = (peg.nama.trim().split(" ")[1] || "").toLowerCase();
+                        
+                        if (kataPertamaRaw === 'asep') {
+                            return kataPertamaPeg === 'asep' && kataKeduaPeg === kataKeduaRaw;
+                        }
+                        return kataPertamaPeg === kataPertamaRaw;
+                    });
+
+                    if (foundPeg) {
+                        matchedPicName = foundPeg.nama; 
+                    }
+                }
+
+                picMap[matchedPicName] = (picMap[matchedPicName] || 0) + 1;
             });
 
             document.getElementById('rekapTotalJenis').innerText = Object.keys(jenisMap).length;
