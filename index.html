@@ -150,6 +150,35 @@
 
     <div id="toastContainer"></div>
 
+    <div id="nipAccessOverlay" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4" onclick="if(event.target===this) tutupModalNip()">
+        <div class="w-full max-w-md overflow-hidden rounded-3xl border border-white/40 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+            <div class="relative overflow-hidden bg-gradient-to-br from-[#1e3264] via-blue-700 to-indigo-700 px-6 pb-7 pt-8 text-white">
+                <div class="absolute -right-8 -top-12 h-40 w-40 rounded-full bg-white/10"></div>
+                <button type="button" onclick="tutupModalNip()" aria-label="Tutup" class="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20 hover:text-white"><i class="fas fa-times"></i></button>
+                <div class="relative z-10 flex items-center gap-4">
+                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl shadow-inner ring-1 ring-white/20"><i class="fas fa-id-card"></i></div>
+                    <div><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">Verifikasi Tim BMN</p><h2 class="mt-1 text-xl font-bold">Konfirmasi akses</h2></div>
+                </div>
+                <p class="relative z-10 mt-4 text-sm leading-relaxed text-blue-50/90">Masukkan NIP anggota BMN untuk melanjutkan. Sesi berlaku sampai pergantian hari di browser ini.</p>
+            </div>
+            <form id="nipAccessForm" onsubmit="kirimNipDariDialog(event)" class="space-y-4 px-6 py-6">
+                <div>
+                    <label for="nipAccessInput" class="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">NIP anggota BMN</label>
+                    <div class="relative"><i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input id="nipAccessInput" type="password" inputmode="numeric" autocomplete="off" maxlength="40" required placeholder="Masukkan NIP" class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-900"></div>
+                </div>
+                <div id="nipAccessErrorBox" class="hidden rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/60 dark:bg-rose-950/40">
+                    <p id="nipAccessError" class="text-sm font-semibold text-rose-700 dark:text-rose-300"></p>
+                    <p id="nipAccessHelp" class="mt-1.5 text-xs text-rose-600 dark:text-rose-300">NIP belum ada akses? Hubungi admin BMN.</p>
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" onclick="tutupModalNip()" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">Batal</button>
+                    <button id="nipAccessSubmit" type="submit" class="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-70"><i class="fas fa-arrow-right-to-bracket mr-2"></i>Lanjutkan</button>
+                </div>
+                <p class="text-center text-[10px] text-slate-400"><i class="fas fa-shield-halved mr-1"></i>Aktivitas aksi dicatat untuk monitoring.</p>
+            </form>
+        </div>
+    </div>
+
     <div id="appWrapper" class="transition-all duration-300">
 
         <!-- Navigation Bar -->
@@ -182,8 +211,8 @@
                         <i class="fas fa-moon mb-1 text-[13px]" id="iconDark"></i> Tema
                     </button>
 
-                    <a href="#" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-16 text-center" title="Pengaturan Sistem">
-                        <i class="fas fa-cog mb-1 text-[13px]"></i> Pengaturan
+                    <a href="#" id="menuPengaturanDesktop" onclick="openModalSettings()" class="text-amber-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all cursor-pointer w-16 text-center" title="Masukkan NIP admin untuk membuka pengaturan">
+                        <i class="fas fa-lock mb-1 text-[13px]"></i> Akses Admin
                     </a>
                 </div>
             </nav>
@@ -197,7 +226,7 @@
             </div>
             <div class="flex space-x-1">
                 <button onclick="toggleDarkMode()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-moon"></i></button>
-                <button onclick="openModalSettings()" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-cog"></i> Setting</button>
+                <button onclick="openModalSettings()" id="menuPengaturanMobile" class="px-2.5 py-1 bg-amber-600 text-white rounded"><i class="fas fa-lock"></i> Admin</button>
             </div>
         </div>
 
@@ -244,12 +273,13 @@
                                     </div>
                                 </th>
                                 <th class="px-3 py-3 text-center align-middle w-[10%]">TANGGAL</th>
+                                <th class="px-3 py-3 text-center align-middle w-24">STATUS</th>
                                 <th class="px-3 py-3 text-center align-middle w-20">AKSI</th>
                             </tr>
                         </thead>    
                         <tbody id="tableBody" class="text-xs text-slate-700 dark:text-slate-200">
                             <tr id="rowLoading">
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">
                                     <i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i>
                                     <p>Menarik data dari Google Spreadsheet...</p>
                                 </td>
@@ -270,7 +300,7 @@
             <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-bold text-[#1e3264] dark:text-blue-400">Rekapitulasi Data Penomoran</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Statistik dan Pivot Data Formulir Keseluruhan</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Filter rekap dan unduh Excel sesuai data yang dibutuhkan.</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button onclick="exportDataExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg flex items-center text-xs font-semibold shadow-xs transition-colors">
@@ -280,6 +310,28 @@
                         <i class="fas fa-sync-alt mr-1.5 text-slate-400"></i> Muat Ulang
                     </button>
                 </div>
+            </div>
+
+            <div class="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-700 dark:bg-slate-800">
+                <div class="mb-3 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200"><i class="fas fa-filter text-blue-500"></i> Filter data rekap</div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <label for="rekapFilterPIC" class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">PIC BMN</label>
+                        <select id="rekapFilterPIC" onchange="generateRekap()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="">Semua PIC</option></select>
+                    </div>
+                    <div>
+                        <label for="rekapFilterJenis" class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">Nama formulir</label>
+                        <select id="rekapFilterJenis" onchange="generateRekap()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="">Semua formulir</option></select>
+                    </div>
+                    <div>
+                        <label for="rekapFilterStatus" class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">Status</label>
+                        <select id="rekapFilterStatus" onchange="generateRekap()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="">Semua status</option></select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="resetFilterRekap()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"><i class="fas fa-rotate-left mr-1"></i> Reset filter</button>
+                    </div>
+                </div>
+                <p class="mt-3 text-[10px] text-slate-400">Filter bisa digabung. Tombol Excel akan mengunduh data sesuai pilihan di atas.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -296,6 +348,14 @@
                     <div><p class="text-xs font-semibold text-slate-500 dark:text-slate-400">PIC BMN Terlibat</p><h3 id="rekapTotalPIC" class="text-2xl font-bold text-[#1e3264] dark:text-white">0</h3></div>
                 </div>
             </div>
+
+            <section class="mb-6">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                    <h2 class="text-sm font-bold text-[#1e3264] dark:text-blue-300">Jumlah ajuan per status</h2>
+                    <span id="rekapFilterSummary" class="text-[10px] text-slate-400"></span>
+                </div>
+                <div id="rekapStatusCards" class="grid grid-cols-2 gap-3 sm:grid-cols-4"></div>
+            </section>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col h-[450px]">
@@ -373,7 +433,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN</label>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIC BMN (otomatis dari NIP)</label>
                     <select id="inputPicBmn" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                 </div>
                 <div>
@@ -396,6 +456,12 @@
                     <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tempat / Tujuan Barang</label>
                     <input id="inputTempat" type="text" placeholder="Contoh: Kantor Dipo" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
+            </div>
+
+            <div>
+                <label class="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Status Ajuan</label>
+                <select id="inputStatusAjuan" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Status dapat diubah kembali melalui tombol Edit pada data ajuan.</p>
             </div>
 
             <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -496,6 +562,7 @@
                 </div>
                 
                 <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <button onclick="migrasiDataLama()" class="text-amber-600 hover:text-amber-700 text-xs font-bold underline transition-colors">Migrasi ID & status data lama</button>
                     <button onclick="resetPengaturanDefault()" class="text-red-500 hover:text-red-700 text-xs font-bold underline transition-colors">Reset Pengaturan ke Awal</button>
                     
                     <div class="flex flex-col sm:items-end text-right w-full sm:w-auto">
@@ -511,8 +578,8 @@
 
     <!-- Scripts -->
     <script>
-        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbxVEwnprKvGUYFUOVOAjkHx6LOEMX8sIO9GVHOrAKWNrOp1Oio05xfr7u6bKXfg-10T/exec";
-        const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1aiu5p_06EoY6cIWiJn2q5yW966E_T0K5h0eOPUEhYE4/edit?usp=sharing";
+        const DEFAULT_URL_API = "https://script.google.com/macros/s/AKfycbyqolEYjwlOxSPSjcB6qR25V9Qj7IQmh5GyPK6hdXf1I9RvGZuP8cN11xIxthP464gGvw/exec";
+        const DEFAULT_URL_SHEET = "https://docs.google.com/spreadsheets/d/1qA1kURw_1aYsSau00KiU5thBms_8vrnuuOX1BaGALXg/edit?usp=sharing";
         
         const DEFAULT_PICS = ["Erwin Rzki Wardhani", "Surya Tantra", "Shodiq Ridwanu", "Giat Santoso", "Tedi Setiadi", "Resa Hilmawati", "Samantha Amin", "Asep Supriatna", "Dikdik Hermawan"];
         
@@ -552,6 +619,10 @@
         let listJenis = [...DEFAULT_JENIS];
         let listPegawaiGlobal = [];
         let editingJenisIdx = -1;
+        let currentUser = null;
+        const NIP_SESSION_KEY = 'bmn_nip_session_v1';
+        let nipDialogResolve = null;
+        let nipLoginInProgress = false;
         
         let currentKategoriAjuan = 'bmn';
         
@@ -560,10 +631,14 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderDropdownsDinamis();
-            loadDataDariCloud();
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') periksaSesiNip();
+            });
             initKeyboardShortcuts();
             initNetworkListener();
             initPocongGame();
+            pulihkanSesiNip();
+            loadDataDariCloud();
         });
 
         function showToast(message, type = 'success') {
@@ -576,7 +651,7 @@
             else if (type === 'info') { bgClass = "bg-blue-600 text-white"; icon = "fa-info-circle"; }
 
             toast.className = `toast-item ${bgClass} px-4 py-3 rounded-xl shadow-lg flex items-center justify-between text-xs font-semibold`;
-            toast.innerHTML = `<div class="flex items-center space-x-2"><i class="fas ${icon} text-base"></i><span>${message}</span></div>`;
+            toast.innerHTML = `<div class="flex items-center space-x-2"><i class="fas ${icon} text-base"></i><span>${escapeHtml(message)}</span></div>`;
             
             container.appendChild(toast);
             setTimeout(() => {
@@ -585,6 +660,159 @@
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        function sessionExpiryHariIni() {
+            const end = new Date();
+            end.setHours(24, 0, 0, 0);
+            return end.getTime();
+        }
+
+        async function kirimAksiAuth(action, nip) {
+            const response = await fetch(curAPIUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, nip: String(nip || '').trim() })
+            });
+            return response.json();
+        }
+
+        function withIdentity(payload) {
+            return Object.assign({}, payload, { nip: currentUser ? currentUser.nip : '' });
+        }
+
+        function periksaSesiNip() {
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(NIP_SESSION_KEY) || 'null'); } catch (_) {}
+            if (currentUser && (!saved || Number(saved.expiresAt) <= Date.now())) {
+                localStorage.removeItem(NIP_SESSION_KEY);
+                currentUser = null;
+                aturMenuAdmin(null);
+            }
+        }
+
+        function aturMenuAdmin(user) {
+            const admin = !!user && String(user.role || '').toUpperCase() === 'ADMIN';
+            const desktop = document.getElementById('menuPengaturanDesktop');
+            const mobile = document.getElementById('menuPengaturanMobile');
+            if (desktop) { desktop.innerHTML = `<i class="fas ${admin ? 'fa-cog' : 'fa-lock'} mb-1 text-[13px]"></i> ${admin ? 'Pengaturan' : 'Akses Admin'}`; desktop.title = admin ? 'Pengaturan Sistem' : 'Masukkan NIP admin untuk membuka pengaturan'; }
+            if (mobile) mobile.innerHTML = `<i class="fas ${admin ? 'fa-cog' : 'fa-lock'}"></i> ${admin ? 'Setting' : 'Admin'}`;
+        }
+
+        async function pulihkanSesiNip() {
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(NIP_SESSION_KEY) || 'null'); } catch (_) {}
+            if (!saved || !saved.nip || Number(saved.expiresAt) <= Date.now()) {
+                localStorage.removeItem(NIP_SESSION_KEY);
+                return;
+            }
+            try {
+                const result = await kirimAksiAuth('verifikasi', saved.nip);
+                if (result.status === 'success' && result.user) {
+                    currentUser = result.user;
+                    aturMenuAdmin(currentUser);
+                    return;
+                }
+            } catch (_) {}
+            localStorage.removeItem(NIP_SESSION_KEY);
+        }
+
+        function bukaModalNip() {
+            const overlay = document.getElementById('nipAccessOverlay');
+            const input = document.getElementById('nipAccessInput');
+            const errorBox = document.getElementById('nipAccessErrorBox');
+            if (!overlay) return Promise.resolve(null);
+            if (nipDialogResolve) return new Promise(resolve => {
+                const existingResolve = nipDialogResolve;
+                nipDialogResolve = result => { existingResolve(result); resolve(result); };
+            });
+            errorBox?.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            if (input) { input.value = ''; setTimeout(() => input.focus(), 80); }
+            return new Promise(resolve => { nipDialogResolve = resolve; });
+        }
+
+        function tutupModalNip(user = null) {
+            const overlay = document.getElementById('nipAccessOverlay');
+            overlay?.classList.add('hidden');
+            overlay?.classList.remove('flex');
+            if (nipDialogResolve) {
+                const resolve = nipDialogResolve;
+                nipDialogResolve = null;
+                resolve(user);
+            }
+        }
+
+        async function kirimNipDariDialog(event) {
+            event.preventDefault();
+            if (nipLoginInProgress) return;
+            const input = document.getElementById('nipAccessInput');
+            const errorBox = document.getElementById('nipAccessErrorBox');
+            const errorText = document.getElementById('nipAccessError');
+            const helpText = document.getElementById('nipAccessHelp');
+            const button = document.getElementById('nipAccessSubmit');
+            const nip = String(input?.value || '').trim();
+            if (!nip) { input?.focus(); return; }
+            nipLoginInProgress = true;
+            if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memeriksa NIP…'; }
+            errorBox?.classList.add('hidden');
+            try {
+                const result = await kirimAksiAuth('login', nip);
+                if (result.status !== 'success' || !result.user) {
+                    const message = result.message || 'NIP tidak terdaftar atau belum aktif.';
+                    if (errorText) errorText.textContent = message;
+                    const accessDenied = /nip|akun|akses|terdaftar|aktif/i.test(message);
+                    if (helpText) helpText.classList.toggle('hidden', !accessDenied);
+                    errorBox?.classList.remove('hidden');
+                    input?.select();
+                    return;
+                }
+                const user = result.user;
+                localStorage.setItem(NIP_SESSION_KEY, JSON.stringify({ nip: user.nip, expiresAt: sessionExpiryHariIni() }));
+                currentUser = user;
+                aturMenuAdmin(user);
+                tutupModalNip(user);
+            } catch (error) {
+                if (errorText) errorText.textContent = error.message || 'Tidak dapat memeriksa NIP. Periksa koneksi dan URL Apps Script.';
+                helpText?.classList.add('hidden');
+                errorBox?.classList.remove('hidden');
+            } finally {
+                nipLoginInProgress = false;
+                if (button && nipDialogResolve) { button.disabled = false; button.innerHTML = '<i class="fas fa-arrow-right-to-bracket mr-2"></i>Lanjutkan'; }
+            }
+        }
+
+        async function pastikanAksesNip(adminOnly = false) {
+            periksaSesiNip();
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(NIP_SESSION_KEY) || 'null'); } catch (_) {}
+            let user = null;
+            if (saved && saved.nip && Number(saved.expiresAt) > Date.now()) {
+                try {
+                    const checked = await kirimAksiAuth('verifikasi', saved.nip);
+                    if (checked.status === 'success') user = checked.user;
+                } catch (_) {}
+            }
+            if (!user) {
+                if (saved) localStorage.removeItem(NIP_SESSION_KEY);
+                user = await bukaModalNip();
+                if (!user) return false;
+            }
+            currentUser = user;
+            const admin = String(user.role || '').toUpperCase() === 'ADMIN';
+            aturMenuAdmin(user);
+            if (adminOnly && !admin) {
+                showToast('NIP terdaftar, tetapi akun ini bukan admin BMN.', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
         }
 
         function gantiKategoriAjuan(kat) {
@@ -610,30 +838,31 @@
             if (!inputJenisEl) return;
 
             let opsiList = [...listJenis];
-            inputJenisEl.innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + opsiList.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            inputJenisEl.innerHTML = '<option value="">-- Pilih Jenis Formulir --</option>' + opsiList.map(j => `<option value="${escapeHtml(j.nama)}">${escapeHtml(j.nama)}</option>`).join('');
         }
         
         function renderDropdownPegawai() {
             const selectEl = document.getElementById('inputNamaPegawai');
             if (selectEl) {
                 selectEl.innerHTML = '<option value="">-- Pilih Katim / Kaur / PJ / Panitia / Penerima --</option>' + 
-                    listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+                    listPegawaiGlobal.map(p => `<option value="${escapeHtml(p.nama)}">${escapeHtml(p.nama)} ${p.nip ? '('+escapeHtml(p.nip)+')' : ''}</option>`).join('');
             }
             
             const selectSetPic = document.getElementById('setPicNama');
             if (selectSetPic) {
                 selectSetPic.innerHTML = '<option value="">-- Pilih dari Data Pegawai --</option>' + 
-                    listPegawaiGlobal.map(p => `<option value="${p.nama}">${p.nama} ${p.nip ? '('+p.nip+')' : ''}</option>`).join('');
+                    listPegawaiGlobal.map(p => `<option value="${escapeHtml(p.nama)}">${escapeHtml(p.nama)} ${p.nip ? '('+escapeHtml(p.nip)+')' : ''}</option>`).join('');
             }
         }
 
         function exportDataExcel() {
-            if (!globalDataList || globalDataList.length === 0) {
+            const exportData = getRekapFilteredData();
+            if (!exportData.length) {
                 showToast("Tidak ada data untuk diekspor!", "error");
                 return;
             }
             
-            const exportRows = globalDataList.map((item, idx) => ({
+            const exportRows = exportData.map((item, idx) => ({
                 "No": idx + 1,
                 "Kategori": "Tim BMN Internal",
                 "Katim/Kaur/PJ/Panitia/Penerima": item.namaPegawai || '-',
@@ -643,15 +872,26 @@
                 "Tempat / Tujuan": item.tempat || '-',
                 "Jenis Formulir": item.jenis || '-',
                 "PIC BMN": item.pic || '-',
-                "Tanggal": item.tanggal || '-'
+                "Tanggal": item.tanggal || '-',
+                "Status": item.status || 'Menunggu'
             }));
 
-            const worksheet = XLSX.utils.json_to_sheet(exportRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Penomoran BMN");
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(exportRows), "Data Ajuan");
+            const buatRingkasan = key => {
+                const map = {};
+                exportData.forEach(item => {
+                    const label = item[key] || (key === 'status' ? 'Menunggu' : 'Tidak diketahui');
+                    map[label] = (map[label] || 0) + 1;
+                });
+                return Object.entries(map).sort((a,b) => b[1] - a[1]).map(([nama,jumlah]) => ({Nama:nama, Jumlah:jumlah}));
+            };
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(buatRingkasan('pic')), "Rekap PIC");
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(buatRingkasan('jenis')), "Rekap Formulir");
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(buatRingkasan('status')), "Rekap Status");
             
             XLSX.writeFile(workbook, `Rekap_Penomoran_BMN_BBGTK_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast("Laporan Excel berhasil diunduh!", "success");
+            showToast(`Laporan Excel berisi ${exportData.length} data berhasil diunduh.`, "success");
         }
 
         function toggleDarkMode() {
@@ -879,7 +1119,8 @@
             }
         }
 
-        function openModalSettings() {
+        async function openModalSettings() {
+            if (!await pastikanAksesNip(true)) return;
             document.getElementById('modalSettingsOverlay').classList.remove('hidden');
             renderSettingTables();
             document.getElementById('setAppUrl').value = curAPIUrl;
@@ -903,9 +1144,9 @@
         function renderSettingTables() {
             document.getElementById('tbodySettingJenis').innerHTML = listJenis.map((j, idx) => `
                 <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <td class="px-3 py-2 font-medium">${j.nama}</td>
-                    <td class="px-3 py-2 font-mono text-xs text-blue-600 dark:text-blue-400">${j.format}</td>
-                    <td class="px-3 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[150px]" title="${j.templateUrl || '-'}">${j.templateUrl || '-'}</td>
+                    <td class="px-3 py-2 font-medium">${escapeHtml(j.nama)}</td>
+                    <td class="px-3 py-2 font-mono text-xs text-blue-600 dark:text-blue-400">${escapeHtml(j.format)}</td>
+                    <td class="px-3 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[150px]" title="${escapeHtml(j.templateUrl || '-')}">${escapeHtml(j.templateUrl || '-')}</td>
                     <td class="px-3 py-2 text-center whitespace-nowrap">
                         <button onclick="editSettingJenis(${idx})" class="text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/40 p-1.5 rounded mr-1" title="Edit"><i class="fas fa-pen"></i></button>
                         <button onclick="hapusSettingJenis(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
@@ -916,7 +1157,7 @@
             document.getElementById('tbodySettingPic').innerHTML = listPics.map((p, idx) => `
                 <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/40">
                     <td class="px-4 py-2 text-center text-slate-400">${idx + 1}</td>
-                    <td class="px-4 py-2 font-medium">${p}</td>
+                    <td class="px-4 py-2 font-medium">${escapeHtml(p)}</td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
                         <button onclick="hapusSettingPic(${idx})" class="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 p-1.5 rounded" title="Hapus"><i class="fas fa-trash"></i></button>
                     </td>
@@ -1055,6 +1296,7 @@
         }
 
         async function saveSettingsAndUpdate(syncToCloud = false) {
+            if (syncToCloud && !await pastikanAksesNip(true)) return;
             renderSettingTables();
             renderDropdownsDinamis();
 
@@ -1065,7 +1307,7 @@
                     indicator.className = "text-[10px] font-normal bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded-full inline-block";
                 }
                 
-                const payload = { action: "simpan_pengaturan", pics: listPics, jenis: listJenis };
+                const payload = withIdentity({ action: "simpan_pengaturan", pics: listPics, jenis: listJenis });
                 try {
                     const response = await fetch(curAPIUrl, { method: 'POST', body: JSON.stringify(payload) });
                     const res = await response.json();
@@ -1091,11 +1333,20 @@
             const inputPicEl = document.getElementById('inputPicBmn');
             const filterJenisEl = document.getElementById('filterJenis');
 
-            if(filterPicEl) filterPicEl.innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            if(inputPicEl) inputPicEl.innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${p}">${p}</option>`).join('');
-            if(filterJenisEl) filterJenisEl.innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            if(filterPicEl) filterPicEl.innerHTML = '<option value="">Semua PIC</option>' + listPics.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+            if(inputPicEl) inputPicEl.innerHTML = '<option value="">-- Pilih PIC BMN --</option>' + listPics.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+            if(filterJenisEl) filterJenisEl.innerHTML = '<option value="">Semua Jenis</option>' + listJenis.map(j => `<option value="${escapeHtml(j.nama)}">${escapeHtml(j.nama)}</option>`).join('');
             
             renderDropdownJenisModal();
+        }
+
+        function pasangPicAkun() {
+            const el = document.getElementById('inputPicBmn');
+            const pic = currentUser && String(currentUser.pic || '').trim();
+            if (!el || !pic) return;
+            if (![...el.options].some(option => option.value === pic)) el.add(new Option(pic, pic));
+            el.value = pic;
+            el.disabled = true;
         }
 
         async function loadDataDariCloud() {
@@ -1103,12 +1354,14 @@
             const iconRefresh = document.getElementById('iconRefresh');
             if(iconRefresh) iconRefresh.classList.add('rotate-180');
 
-            tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
 
             try {
-                const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + Date.now();
                 const response = await fetch(antiCacheUrl);
                 const result = await response.json();
+                if (result.status === 'error') throw new Error(result.message || 'Akses ditolak.');
+                window.STATUS_AJUAN = Array.isArray(result.statuses) ? result.statuses : ['Menunggu','Diproses','Selesai','Dibatalkan'];
                 
                 if (result.pics && Array.isArray(result.pics) && result.pics.length > 0) listPics = result.pics;
                 if (result.jenis && Array.isArray(result.jenis) && result.jenis.length > 0) listJenis = result.jenis;
@@ -1117,11 +1370,12 @@
                     renderDropdownPegawai();
                 }
                 saveSettingsAndUpdate(false);
+                if (currentUser) pasangPicAkun();
 
                 if(!result.data || result.data.length === 0) {
                     globalDataList = [];
                     filteredDataList = [];
-                    tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Belum ada data.</td></tr>`;
                     renderPagination();
                 } else {
                     globalDataList = [...result.data].reverse();
@@ -1133,7 +1387,7 @@
                 generateRekap();
             } catch (error) {
                 console.error("Gagal load data:", error);
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500 font-bold">Gagal terhubung ke Cloud. Pastikan API URL benar.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-red-500 font-bold">${escapeHtml(error.message || 'Gagal terhubung ke Cloud. Pastikan API URL benar.')}</td></tr>`;
                 globalDataList = [];
                 filteredDataList = [];
                 showToast("Gagal terhubung ke server Cloud", "error");
@@ -1148,7 +1402,7 @@
             tableBody.innerHTML = '';
 
             if (filteredDataList.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Tidak ada data yang cocok.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Tidak ada data yang cocok.</td></tr>`;
                 renderPagination();
                 return;
             }
@@ -1178,7 +1432,7 @@
                 formatTgl = String(data.tanggal);
             }
 
-            const namaDisplay = data.namaPegawai || 'Internal';
+            const namaDisplay = escapeHtml(data.namaPegawai || 'Internal');
             const badgeKategori = `<div class="mb-1.5">
                 <div class="inline-block w-fit max-w-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-2.5 py-1 rounded-lg text-[11px] leading-relaxed shadow-sm">
                     <i class="fas fa-user-tag mr-1 text-purple-500"></i><span class="font-medium opacity-80">Katim/Kaur/PJ/Panitia/Penerima:</span> <strong class="font-extrabold ml-0.5 whitespace-normal">${namaDisplay}</strong>
@@ -1192,32 +1446,42 @@
             tr.dataset.pekerjaan = data.pekerjaan || '';
             tr.dataset.tempat = data.tempat || '';
             tr.dataset.namaPegawai = data.namaPegawai || '';
-            tr.dataset.nipPegawai = data.nipPegawai || ''; 
+            tr.dataset.nipPegawai = data.nipPegawai || '';
+            const statusAjuan = data.status || 'Menunggu';
+            const statusClass = statusAjuan === 'Selesai'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                : statusAjuan === 'Diproses'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                    : statusAjuan === 'Dibatalkan'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800'
+                        : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800';
 
             tr.innerHTML = `
-                <td class="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400">${data.no || '-'}</td>
+                <td class="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400">${escapeHtml(data.no || '-')}</td>
                 <td class="px-4 py-2.5">
                     ${badgeKategori}
-                    <div class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">${data.pekerjaan || '-'}</div>
+                    <div class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">${escapeHtml(data.pekerjaan || '-')}</div>
                 </td>
-                <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">${data.tempat || '-'}</td>
+                <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">${escapeHtml(data.tempat || '-')}</td>
                 <td class="px-4 py-2.5 text-center">
-                    <span class="inline-block bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${data.jenis || '-'}</span>
+                    <span class="inline-block bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded text-[11px] font-bold mb-1.5">${escapeHtml(data.jenis || '-')}</span>
                     <div class="flex items-center justify-between bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                        <span class="text-xs font-bold text-blue-700 dark:text-blue-300 tracking-wide">${data.nomorSurat || '-'}</span>
+                        <span class="text-xs font-bold text-blue-700 dark:text-blue-300 tracking-wide">${escapeHtml(data.nomorSurat || '-')}</span>
                         <button onclick="salinNomorTabel(this)" class="bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 border border-blue-300 dark:border-blue-700 rounded px-1.5 py-0.5 text-[10px] font-semibold flex items-center transition-all" title="Salin Nomor"><i class="far fa-copy"></i></button>
                     </div>
                 </td>
-                <td class="px-4 py-2.5 text-center text-slate-700 dark:text-slate-300 font-medium">${data.pic || '-'}</td>
+                <td class="px-4 py-2.5 text-center text-slate-700 dark:text-slate-300 font-medium">${escapeHtml(data.pic || '-')}</td>
                 <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                    <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">${namaHari}</div>
-                    <div class="text-slate-600 dark:text-slate-400 text-[11px] font-medium mt-0.5">${formatTgl}</div>
+                    <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">${escapeHtml(namaHari)}</div>
+                    <div class="text-slate-600 dark:text-slate-400 text-[11px] font-medium mt-0.5">${escapeHtml(formatTgl)}</div>
+                </td>
+                <td class="px-3 py-2.5 text-center">
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClass}"><span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-current"></span>${escapeHtml(statusAjuan)}</span>
                 </td>
                 <td class="px-3 py-2.5 text-center">
                     <div class="flex items-center justify-center space-x-1">
-                        <button onclick="openModalEdit(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
+                        <button onclick="openModalEdit('${escapeHtml(data.id || '')}')" class="w-7 h-7 flex items-center justify-center rounded border border-amber-300 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>
                         <button onclick="downloadDraft(this)" class="w-7 h-7 flex items-center justify-center rounded border border-blue-300 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30" title="Download Word (.docx)"><i class="fas fa-download text-[10px]"></i></button>
-                        <button onclick="hapusDataCloud(${data.rowIndex})" class="w-7 h-7 flex items-center justify-center rounded border border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30" title="Hapus"><i class="far fa-trash-alt text-[10px]"></i></button>
                     </div>
                 </td>
             `;
@@ -1380,82 +1644,106 @@
             renderTablePage();
         }
 
+        function isiFilterRekap(selectId, defaultLabel, values) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const previous = select.value;
+            const uniqueValues = [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
+                .sort((a,b) => a.localeCompare(b, 'id'));
+            select.innerHTML = `<option value="">${escapeHtml(defaultLabel)}</option>` + uniqueValues
+                .map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+            select.value = uniqueValues.includes(previous) ? previous : '';
+        }
+
+        function siapkanFilterRekap() {
+            isiFilterRekap('rekapFilterPIC', 'Semua PIC', globalDataList.map(item => item.pic));
+            isiFilterRekap('rekapFilterJenis', 'Semua formulir', globalDataList.map(item => item.jenis));
+            isiFilterRekap('rekapFilterStatus', 'Semua status', [
+                ...(window.STATUS_AJUAN || ['Menunggu','Diproses','Selesai','Dibatalkan']),
+                ...globalDataList.map(item => item.status || 'Menunggu')
+            ]);
+        }
+
+        function getRekapFilteredData() {
+            const pic = document.getElementById('rekapFilterPIC')?.value || '';
+            const jenis = document.getElementById('rekapFilterJenis')?.value || '';
+            const status = document.getElementById('rekapFilterStatus')?.value || '';
+            return globalDataList.filter(item =>
+                (!pic || String(item.pic || '') === pic) &&
+                (!jenis || String(item.jenis || '') === jenis) &&
+                (!status || String(item.status || 'Menunggu') === status)
+            );
+        }
+
+        function resetFilterRekap() {
+            ['rekapFilterPIC','rekapFilterJenis','rekapFilterStatus'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) select.value = '';
+            });
+            generateRekap();
+        }
+
+        function renderPeringkatRekap(targetId, map, tone) {
+            const target = document.getElementById(targetId);
+            const entries = Object.entries(map).sort((a,b) => b[1] - a[1]);
+            const max = entries.length ? entries[0][1] : 1;
+            const color = tone === 'purple'
+                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+            const bar = tone === 'purple' ? 'bg-purple-500' : 'bg-blue-500';
+            target.innerHTML = entries.length ? entries.map(([nama,count]) => `
+                <div class="group relative border-b border-slate-100 px-4 py-3 transition-all hover:bg-slate-50 dark:border-slate-700/50 dark:hover:bg-slate-900/40 last:border-0">
+                    <div class="relative z-10 mb-1.5 flex items-center justify-between">
+                        <span class="truncate pr-4 text-[13px] font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(nama)}</span>
+                        <span class="rounded px-2.5 py-0.5 text-[11px] font-bold ${color}">${count}</span>
+                    </div>
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div class="${bar} h-full rounded-full transition-all duration-700" style="width:${(count / max) * 100}%"></div></div>
+                </div>`).join('') : '<div class="flex h-full items-center justify-center text-xs text-slate-400">Belum ada data</div>';
+        }
+
         function generateRekap() {
-            document.getElementById('rekapTotalSurat').innerText = globalDataList.length;
-            
-            const jenisMap = {};
-            const picMap = {};
-            
-            globalDataList.forEach(item => {
-                const j = item.jenis || 'Lainnya';
-                jenisMap[j] = (jenisMap[j] || 0) + 1;
-                
-                let rawPic = item.pic || 'Tidak Diketahui';
-                let matchedPicName = rawPic;
-                
-                if (rawPic !== 'Tidak Diketahui' && listPegawaiGlobal && listPegawaiGlobal.length > 0) {
-                    const kataPertamaRaw = rawPic.trim().split(" ")[0].toLowerCase();
-                    const kataKeduaRaw = (rawPic.trim().split(" ")[1] || "").toLowerCase();
-
-                    const foundPeg = listPegawaiGlobal.find(peg => {
-                        const kataPertamaPeg = peg.nama.trim().split(" ")[0].toLowerCase();
-                        const kataKeduaPeg = (peg.nama.trim().split(" ")[1] || "").toLowerCase();
-                        
-                        if (kataPertamaRaw === 'asep') {
-                            return kataPertamaPeg === 'asep' && kataKeduaPeg === kataKeduaRaw;
-                        }
-                        return kataPertamaPeg === kataPertamaRaw;
-                    });
-
-                    if (foundPeg) {
-                        matchedPicName = foundPeg.nama; 
-                    }
-                }
-
-                picMap[matchedPicName] = (picMap[matchedPicName] || 0) + 1;
+            siapkanFilterRekap();
+            const dataRekap = getRekapFilteredData();
+            const jenisMap = {}, picMap = {}, statusMap = {};
+            dataRekap.forEach(item => {
+                const jenis = item.jenis || 'Lainnya';
+                const pic = item.pic || 'Tidak Diketahui';
+                const status = item.status || 'Menunggu';
+                jenisMap[jenis] = (jenisMap[jenis] || 0) + 1;
+                picMap[pic] = (picMap[pic] || 0) + 1;
+                statusMap[status] = (statusMap[status] || 0) + 1;
             });
 
+            document.getElementById('rekapTotalSurat').innerText = dataRekap.length;
             document.getElementById('rekapTotalJenis').innerText = Object.keys(jenisMap).length;
             document.getElementById('rekapTotalPIC').innerText = Object.keys(picMap).length;
-
-            const sortedJenis = Object.entries(jenisMap).sort((a,b) => b[1] - a[1]);
-            const maxJenis = sortedJenis.length > 0 ? sortedJenis[0][1] : 1;
-            
-            document.getElementById('listRekapJenis').innerHTML = sortedJenis.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedJenis.map(([nama, count]) => {
-                const percentage = (count / maxJenis) * 100;
-                return `
-                    <div class="group relative px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                        <div class="flex justify-between items-center mb-1.5 z-10 relative">
-                            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate pr-4">${nama}</span>
-                            <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-0.5 rounded text-[11px]">${count}</span>
-                        </div>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-blue-500 h-full rounded-full transition-all duration-700" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
+            const allStatuses = [...new Set([...(window.STATUS_AJUAN || ['Menunggu','Diproses','Selesai','Dibatalkan']), ...Object.keys(statusMap)])];
+            document.getElementById('rekapStatusCards').innerHTML = allStatuses.map(status => {
+                const color = status === 'Selesai' ? 'emerald' : status === 'Diproses' ? 'blue' : status === 'Dibatalkan' ? 'rose' : 'amber';
+                const colorClasses = {
+                    emerald:'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300',
+                    blue:'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300',
+                    rose:'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300',
+                    amber:'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300'
+                }[color];
+                return `<div class="rounded-xl border p-3 ${colorClasses}"><div class="text-[10px] font-bold uppercase tracking-wide">${escapeHtml(status)}</div><div class="mt-1 text-2xl font-extrabold">${statusMap[status] || 0}</div><div class="text-[10px] opacity-75">ajuan</div></div>`;
             }).join('');
 
-            const sortedPic = Object.entries(picMap).sort((a,b) => b[1] - a[1]);
-            const maxPic = sortedPic.length > 0 ? sortedPic[0][1] : 1;
-            
-            document.getElementById('listRekapPIC').innerHTML = sortedPic.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 text-xs">Belum ada data</div>' : sortedPic.map(([nama, count]) => {
-                const percentage = (count / maxPic) * 100;
-                return `
-                    <div class="group relative px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                        <div class="flex justify-between items-center mb-1.5 z-10 relative">
-                            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate pr-4">${nama}</span>
-                            <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold px-2.5 py-0.5 rounded text-[11px]">${count}</span>
-                        </div>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-purple-500 h-full rounded-full transition-all duration-700" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            const activeFilters = [];
+            const pic = document.getElementById('rekapFilterPIC')?.value;
+            const jenis = document.getElementById('rekapFilterJenis')?.value;
+            const status = document.getElementById('rekapFilterStatus')?.value;
+            if (pic) activeFilters.push('PIC: ' + pic);
+            if (jenis) activeFilters.push('Formulir: ' + jenis);
+            if (status) activeFilters.push('Status: ' + status);
+            document.getElementById('rekapFilterSummary').textContent = `${dataRekap.length} dari ${globalDataList.length} data` + (activeFilters.length ? ' • ' + activeFilters.join(' • ') : ' • Semua data');
+
+            renderPeringkatRekap('listRekapJenis', jenisMap, 'blue');
+            renderPeringkatRekap('listRekapPIC', picMap, 'purple');
         }
         
-        function openModalTambah() {
+        async function openModalTambah() {
+            if (!await pastikanAksesNip(false)) return;
             document.getElementById('modalTitle').innerText = "Tambah Ajuan Penomoran";
             document.getElementById('inputRowIndex').value = "";
             gantiKategoriAjuan('bmn'); 
@@ -1464,18 +1752,22 @@
             if(selectPegawai) selectPegawai.value = "";
             
             document.getElementById('inputPicBmn').value = "";
+            pasangPicAkun();
+            isiOpsiStatusAjuan();
+            document.getElementById('inputStatusAjuan').value = 'Menunggu';
             document.getElementById('inputPekerjaan').value = "";
             document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
             document.getElementById('inputTempat').value = "";
             document.getElementById('modalOverlay').classList.remove('hidden');
         }
 
-        function openModalEdit(rowIndex) {
-            const data = globalDataList.find(d => Number(d.rowIndex) === Number(rowIndex));
+        async function openModalEdit(dataId) {
+            if (!await pastikanAksesNip(false)) return;
+            const data = globalDataList.find(d => String(d.id || '') === String(dataId));
             if(!data) { showToast("Data tidak ditemukan!", "error"); return; }
             
             document.getElementById('modalTitle').innerText = "Edit Ajuan Penomoran";
-            document.getElementById('inputRowIndex').value = data.rowIndex;
+            document.getElementById('inputRowIndex').value = data.id;
             
             gantiKategoriAjuan(data.kategori || 'bmn');
             
@@ -1483,8 +1775,11 @@
             if(selectPegawai) selectPegawai.value = data.namaPegawai || "";
             
             document.getElementById('inputPicBmn').value = data.pic || "";
+            document.getElementById('inputPicBmn').disabled = !(currentUser && String(currentUser.role || '').toUpperCase() === 'ADMIN');
             document.getElementById('inputJenisFormulir').value = data.jenis || "";
             document.getElementById('inputPekerjaan').value = data.pekerjaan || "";
+            isiOpsiStatusAjuan();
+            document.getElementById('inputStatusAjuan').value = data.status || 'Menunggu';
             
             if(data.tanggal) {
                 let parsed = parseTanggalLokal(data.tanggal);
@@ -1506,7 +1801,8 @@
         }
 
         async function simpanDataCloud() {
-            const rowIndex = document.getElementById('inputRowIndex').value;
+            if (!await pastikanAksesNip(false)) return;
+            const dataId = document.getElementById('inputRowIndex').value;
             const kategori = currentKategoriAjuan;
             
             const selectPegawai = document.getElementById('inputNamaPegawai');
@@ -1523,6 +1819,7 @@
             const pekerjaan = document.getElementById('inputPekerjaan').value.trim();
             const tanggal = document.getElementById('inputTanggal').value;
             const tempat = document.getElementById('inputTempat').value.trim();
+            const status = document.getElementById('inputStatusAjuan').value || 'Menunggu';
 
             if(!pic || !jenis || !pekerjaan || !tanggal || !tempat) {
                 showToast("Semua field form wajib diisi!", "error");
@@ -1540,8 +1837,8 @@
             showToast("Menyimpan data ke Cloud...", "info");
 
             const payload = {
-                action: rowIndex === "" ? "tambah" : "edit",
-                rowIndex: rowIndex === "" ? undefined : Number(rowIndex),
+                action: dataId === "" ? "tambah" : "edit",
+                id: dataId === "" ? undefined : dataId,
                 kategori: kategori,
                 namaPegawai: namaPegawai,
                 nipPegawai: nipPegawai,
@@ -1549,13 +1846,15 @@
                 jenis: jenis,
                 pekerjaan: pekerjaan,
                 tanggal: tanggal,
-                tempat: tempat
+                tempat: tempat,
+                status: status
             };
 
             try {
                 const response = await fetch(curAPIUrl, {
                     method: 'POST',
-                    body: JSON.stringify(payload)
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(withIdentity(payload))
                 });
                 const res = await response.json();
                 if(res.status === "success" || res.result === "success") {
@@ -1574,26 +1873,34 @@
             }
         }
 
-        async function hapusDataCloud(rowIndex) {
-            if(!confirm("Hapus data ajuan ini dari database cloud?")) return;
-            showToast("Menghapus data dari Cloud...", "info");
+        function isiOpsiStatusAjuan() {
+            const select = document.getElementById('inputStatusAjuan');
+            if (!select) return;
+            const statuses = window.STATUS_AJUAN || ['Menunggu','Diproses','Selesai','Dibatalkan'];
+            select.innerHTML = statuses.map(status => `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`).join('');
+        }
+
+        async function migrasiDataLama() {
+            if (!await pastikanAksesNip(true)) return;
+            if (!confirm('Jalankan migrasi untuk memberi ID tetap dan status awal pada data lama? Disarankan membuat salinan Spreadsheet terlebih dahulu.')) return;
             try {
                 const response = await fetch(curAPIUrl, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'hapus', rowIndex: Number(rowIndex) })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(withIdentity({ action: 'migrasi' }))
                 });
                 const res = await response.json();
-                if(res.status === "success" || res.result === "success") {
-                    showToast("Data berhasil dihapus!", "success");
+                if (res.status === 'success') {
+                    showToast('Migrasi selesai. ' + (res.updated || 0) + ' data diperbarui.', 'success');
                     loadDataDariCloud();
                 } else {
-                    showToast("Gagal menghapus: " + (res.message || "Unknown error"), "error");
+                    showToast('Migrasi gagal: ' + (res.message || 'Akses admin diperlukan.'), 'error');
                 }
             } catch (e) {
-                showToast("Terjadi kesalahan jaringan: " + e.message, "error");
-                openOfflineGameModal();
+                showToast('Migrasi gagal: ' + e.message, 'error');
             }
         }
+
     </script>
 </body>
 </html>
