@@ -709,14 +709,22 @@
             try {
                 const result = await kirimAksiAuth('verifikasi', saved.nip);
                 if (result.status === 'success' && result.user) {
+                    saved.user = result.user;
+                    localStorage.setItem(NIP_SESSION_KEY, JSON.stringify(saved));
                     currentUser = result.user;
                     aturMenuAdmin(currentUser);
                     return;
                 }
-            } catch (_) {}
-            localStorage.removeItem(NIP_SESSION_KEY);
+                // Sesi hanya dihapus jika backend secara jelas menolak akun.
+                localStorage.removeItem(NIP_SESSION_KEY);
+            } catch (_) {
+                // Gangguan jaringan sementara tidak mengakhiri sesi browser.
+                if (saved.user) {
+                    currentUser = saved.user;
+                    aturMenuAdmin(currentUser);
+                }
+            }
         }
-
         function bukaModalNip() {
             const overlay = document.getElementById('nipAccessOverlay');
             const input = document.getElementById('nipAccessInput');
@@ -769,7 +777,7 @@
                     return;
                 }
                 const user = result.user;
-                localStorage.setItem(NIP_SESSION_KEY, JSON.stringify({ nip: user.nip, expiresAt: sessionExpiryHariIni() }));
+                localStorage.setItem(NIP_SESSION_KEY, JSON.stringify({ nip: user.nip, expiresAt: sessionExpiryHariIni(), user: user }));
                 currentUser = user;
                 aturMenuAdmin(user);
                 tutupModalNip(user);
@@ -788,11 +796,27 @@
             let saved = null;
             try { saved = JSON.parse(localStorage.getItem(NIP_SESSION_KEY) || 'null'); } catch (_) {}
             let user = null;
+            let verificationUnavailable = false;
             if (saved && saved.nip && Number(saved.expiresAt) > Date.now()) {
                 try {
                     const checked = await kirimAksiAuth('verifikasi', saved.nip);
-                    if (checked.status === 'success') user = checked.user;
-                } catch (_) {}
+                    if (checked.status === 'success' && checked.user) {
+                        user = checked.user;
+                        saved.user = user;
+                        localStorage.setItem(NIP_SESSION_KEY, JSON.stringify(saved));
+                    } else {
+                        // Respons penolakan eksplisit berarti akun sudah tidak valid/aktif.
+                        localStorage.removeItem(NIP_SESSION_KEY);
+                        saved = null;
+                    }
+                } catch (_) {
+                    verificationUnavailable = true;
+                    user = saved.user || null;
+                }
+            }
+            if (!user && verificationUnavailable) {
+                showToast('Koneksi verifikasi sedang terganggu. Sesi tetap tersimpan; coba lagi sebentar.', 'error');
+                return false;
             }
             if (!user) {
                 if (saved) localStorage.removeItem(NIP_SESSION_KEY);
@@ -808,7 +832,6 @@
             }
             return true;
         }
-
         function escapeHtml(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -1354,7 +1377,21 @@
             const iconRefresh = document.getElementById('iconRefresh');
             if(iconRefresh) iconRefresh.classList.add('rotate-180');
 
-            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>Menarik data dari Google Spreadsheet...</p></td></tr>`;
+            const pesanSabar = [
+                'Sebentar ya, spreadsheet-nya lagi pemanasan...',
+                'Mohon sabar, data sedang antre keluar satu per satu.',
+                'Lagi tarik data dari cloud—jangan ke mana-mana dulu, ya!',
+                'Datanya sedang perjalanan. Semoga tidak mampir ngopi dulu.',
+                'Tunggu sebentar, Google Spreadsheet sedang merapikan berkas.',
+                'Sabar ya, data sedang dikumpulkan. Tidak ada yang ditinggal!',
+                'Sedikit lagi... server sedang mencari kacamatanya untuk membaca data.'
+            ];
+            let indexPesan = Math.floor(Math.random() * pesanSabar.length);
+            if (pesanSabar.length > 1 && indexPesan === window.__pesanSabarTerakhir) {
+                indexPesan = (indexPesan + 1) % pesanSabar.length;
+            }
+            window.__pesanSabarTerakhir = indexPesan;
+            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin text-2xl text-blue-500 mb-2"></i><p>${pesanSabar[indexPesan]}</p></td></tr>`;
 
             try {
                 const antiCacheUrl = curAPIUrl + (curAPIUrl.includes('?') ? '&' : '?') + 'nocache=' + Date.now();
@@ -1904,3 +1941,4 @@
     </script>
 </body>
 </html>
+
